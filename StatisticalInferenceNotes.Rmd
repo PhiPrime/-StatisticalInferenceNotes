@@ -13,9 +13,41 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Intro
+# Intro  
+Instructor's Note:  
+"*Statistical inference is the process of drawing conclusions about populations or scientific truths from data. There are many modes of performing inference including statistical modeling, data oriented strategies and explicit use of designs and randomization in analyses. Furthermore, there are broad theories (frequentists, Bayesian, likelihood, design based, …) & numerous complexities (missing data, observed and unobserved confounding, biases) for performing inference. A practitioner can often be left in a debilitating maze of techniques, philosophies and nuance. This course presents the fundamentals of inference in a practical approach for getting things done. After taking this course, students will understand the broad directions of statistical inference and use this information for making informed choices in analyzing data.*  
+  
+*All the best,*  
+  
+*Brian Caffo*"  
+
+Statistical inference help us extend beyond a small subset of data to give answers about a population.  
+
+Course Description:  
+"*In this class students will learn the fundamentals of statistical inference. Students will receive a broad overview of the goals, assumptions and modes of performing statistical inference. Students will be able to perform inferential tasks in highly targeted settings and will be able to use the skills developed as a roadmap for more complex inferential challenges.*"  
+
+
+## GitHub Link for Lectures  
+**[Statistical Inference Lectures on GitHub](https://github.com/bcaffo/courses/tree/master/06_StatisticalInference)**  
+
+
+
 ## Course Book  
+**[The book for this course is located on LeanPub](https://leanpub.com/LittleInferenceBook)**  
+
+
 ## Data Science Specialization Community Site  
+**[The site is created using GitHub Pages](http://datasciencespecialization.github.io/)**  
+
+## Homework Problems  
+The homework problems are optional, they are a good opportunity to practice the skills covered in the course. There are also worked out solutions on youtube (linked to from the book)  
+
+Here's all four homeworks as interactive web pages (it's probably better to just keep up with them from the book):  
+* **[HW 1](http://bcaffo.github.io/courses/06_StatisticalInference/homework/hw1.html#1)**  
+* **[HW 2](http://bcaffo.github.io/courses/06_StatisticalInference/homework/hw2.html#1)**  
+* **[HW 3](http://bcaffo.github.io/courses/06_StatisticalInference/homework/hw3.html#1)**  
+* **[HW 4](http://bcaffo.github.io/courses/06_StatisticalInference/homework/hw4.html#1)**  
+
 **Reminder to commit (01), delete this line** ***AFTER*** **committing**  
 
 # Probability & Expected Values  
