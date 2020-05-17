@@ -1,0 +1,114 @@
+---
+title: "Statistical_Inference_Notes"
+author: "Coursera Course by John Hopkins University"
+date: "INSTRUCTORS: Dr. Brian Caffo, Dr. Roger D. Peng, Dr. Jeff Leek"
+fontsize: 11pt
+output: 
+        pdf_document:
+                toc: true
+                toc_depth: 3
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Intro
+## Course Book  
+## Data Science Specialization Community Site  
+**Reminder to commit (01), delete this line** ***AFTER*** **committing**  
+
+# Probability & Expected Values  
+## Probability mass functions  
+## Probability densisty functions  
+**Reminder to commit (02), delete this line** ***AFTER*** **committing**  
+
+## Conditional Probability  
+## Bayes' rule  
+## Independence  
+**Reminder to commit (03), delete this line** ***AFTER*** **committing**  
+
+## Expected values  
+## Expected values, simple examples  
+## Expected values for PDFs  
+**Reminder to commit (04), delete this line** ***AFTER*** **committing**  
+
+## Lessons with `swirl()`  
+## Quiz 1  
+**Reminder to commit (S1), delete this line** ***AFTER*** **committing**  
+
+# Variability, Distribution, & Asymptotics  
+## Introduction to Variability  
+## Variance Simulation Examples  
+## Standard Error of the Mean  
+## Variance Data Example  
+**Reminder to commit (05), delete this line** ***AFTER*** **committing**  
+
+## Binomial Distrubtion  
+## Normal Distribution  
+## Poisson  
+**Reminder to commit (06), delete this line** ***AFTER*** **committing**  
+
+## Asymptotics and the Law of Large Numbers (LLN)  
+## Asymptotics and the Central Limit Theorem (CLT)  
+## Asymptotics and Confidence Intervals  
+**Reminder to commit (07), delete this line** ***AFTER*** **committing**  
+
+## Lessons with `swirl()`  
+## Quiz 2  
+**Reminder to commit (S2), delete this line** ***AFTER*** **committing**  
+
+# Intervals, Testing, & P-values  
+## T Confidence Intervals  
+## T Confidence Intervals Example  
+## Independent Group T Intervals  
+## A Note on Unequal Variance  
+**Reminder to commit (08), delete this line** ***AFTER*** **committing**  
+
+## Hypothesis Testing  
+## Example of Choosing a Rejection Region  
+## T Tests  
+## Two Group Testing  
+**Reminder to commit (09), delete this line** ***AFTER*** **committing**  
+
+## P-Values  
+## P-Value Further Examples  
+**Reminder to commit (10), delete this line** ***AFTER*** **committing** 
+
+## Lessons with `swirl()`  
+## Quiz 3  
+**Reminder to commit (S3), delete this line** ***AFTER*** **committing**  
+
+# Power, Bootstrapping, & Permutation Tests  
+## Power  
+## Calculating Power  
+## Notes on Power  
+## T Test Power  
+**Reminder to commit (11), delete this line** ***AFTER*** **committing**  
+
+## Multiple Comparisons  
+**Reminder to commit (12), delete this line** ***AFTER*** **committing**  
+
+## Bootstrapping  
+## Bootstrapping Example  
+## Notes on the Bootstrap  
+## Permutation Tests  
+**Reminder to commit (13), delete this line** ***AFTER*** **committing**
+
+## Lessons with `swirl()`  
+## Quiz 4  
+
+**Reminder to commit (S4), delete this line** ***BEFORE*** **committing**  
+
+
+
+
+
+
+
+
+
+
+
+
+
