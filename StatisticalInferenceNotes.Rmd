@@ -48,11 +48,119 @@ Here's all four homeworks as interactive web pages (it's probably better to just
 * **[HW 3](http://bcaffo.github.io/courses/06_StatisticalInference/homework/hw3.html#1)**  
 * **[HW 4](http://bcaffo.github.io/courses/06_StatisticalInference/homework/hw4.html#1)**  
 
-**Reminder to commit (01), delete this line** ***AFTER*** **committing**  
-
 # Probability & Expected Values  
+## Introduction to Probability  
+### Intro  
+Probability assigns a number between 0 and 1 to events to give a sense of the "chance" of the event. These sections will look at the basics of probability calculus.  
+
+**[An additional resource is the class Mathematical Biostatistics Boot Camp 1](https://www.youtube.com/playlist?list=PLpl-gQkQivXhk6qSyiNj51qamjAtZISJ-)**  
+### Probability  
+Given a random experiment (i.e. rolling a die) a probability measure is a population quantity that summarizes the randomness  
+
+Specifically, probability takes a possible outcome from the experiment and:  
+* assigns it a number between 0 and 1  
+* so that the probability that something occurs is 1 (the die must be rolled)  
+* so that the probability of the union of any two sets of outsomes that are mutually exclusive is the sum of their repective probabilities (`P(E|F) = P(E) + P(F)`)  
+
+### Rules probability must follow  
+* The probability that nothing occurs is 0  
+* The probability that something occurs is 1  
+* The probability of something is 1 minus the probability that the opposite occurs, the conjugate  
+* If an event **A** implies the occurrence of event **B**, then the probability of **A** occuring is less than or equal to the probability that **B** occurs  
+* For any two events the probability that at least one occurs is the sum of thier probabilites minus their intersection (`P(E|F) = P(E)+P(F)-P(E&F)`)  
+
+
+
 ## Probability mass functions  
+* Probability calculus is useful for understanding the rules that probabilities must follow.  
+* We need ways to model and think about probabilites for numeric outcomes of experiments  
+        + Densities and mass functions for random variables are the best starting point for this  
+* The goal is to use the data to estimate properties of the population  
+* A **random variable** is a numeric outsome of an experiment and can be **discrete** or **continuous**  
+        + For **discrete** a probability can be assigned for every value it can take  
+        + for **continous** a probability can be assigned for the ranges of values it can take  
+
+Some examples of variables that can be seen as random variables  
+* The outcome of the flip of a coin (discrete)  
+* The outcome from the roll of a die (discrete)  
+* The web site traffic on a given day  
+        + Since this discrete variable has no upper bound we'd view it as a poisoon distribution  
+* The BMI of a subject four years after a baseline measuremnt (continous)  
+* The hypertension status of a subject randomly drawn from a population (binomial discrete variable)  
+* The number of people who click on an ad (discrete; poisson)  
+* Intelligence quotients for a sample of children (continous)  
+
+### PMF  
+* A **Probability mass function** evaluated at a value corresponds ot the probability that a random variable takes that value. To be a valid pmf a function, $p$, must satisfy:  
+        1) It must always be larger than or equal to 0  
+        2) The sum of the possible values that the random variable can take has to add up to one  
+  
+Example: Coin Flip  
+$X = 0$ represents tails and $X = 1$ represents heads  
+$p(x) = (1/2)^x * (1/2)^{1-x} for x = 0,1$  
+And for a loaded coin this could be generalized as  
+$p(x) = \theta^x * (1-\theta)^{1-x} for x = 0,1$ where $\theta$ represents propabilty of heads  
+When evaluating this we get..  
+Probability of heads is $p(1) = \theta^1 * (1-\theta)^{1-1} = \theta$ and  
+Probability of tails is $p(0) = \theta^0 * (1-\theta)^{1-0} = 1-\theta$   
+
 ## Probability densisty functions  
+* A **probability density function** (pdf), is a function associated with a continouous random variable  
+* To be a valid pdf, a function must:  
+1) Be larger than or equal to zero everywhere  
+2) The total area under it must be one  
+
+* Areas under pdfs correspond to probabilities for that random variable  
+
+### Example with beta density (triangle & piecewise fn)  
+$f(x) = \left\{\begin{array}{ll} 2x & for \quad 0 < x < 1 \\ 0 & \quad otherwise \end{array} \right.$
+  
+```{r}
+x <- c(-0.5, 0, 1, 1, 1.5)
+y <- c(   0, 0, 2, 0,   0)
+plot(x, y, lwd = 3, frame = FALSE, type = "l")
+```
+
+To check if this is a valid PDF we can calculate the total area, using geometry we have a triangle with a *base of 1* and a *height of 2* $A=1/2bh = h/2*b = 2/2 *1 = 1$, therefore it statisfies the rules for a PDF.  
+  
+![Using Integrals](./Images/integral_meme.jpg)
+$\int_0^1\mathrm{2x}\mathrm{d}x = [x^2]|_0^1 = 1^2 - 0^2 = 1$
+
+Assume this pdf is for the porportion of health calls that get addressed in a given day. What's the probability that 75% or fewer of calls get addressed?  
+$\int_0^{0.75}\mathrm{2x}\mathrm{d}x = [x^2]|_0^{0.75} = {0.75}^2 - 0^2 = 0.5625$  
+The beta function is also a function in R:  
+```{r}
+#first param is for the quantile
+#second param is the height of the distrbution
+#third param is the width of the dist.
+pbeta(0.75, 2, 1)
+```
+
+### Cumulative Distribution Function (CDF) and Survival Function  
+The **cumulative distribution function** (CDF) of a random variable, X, returns the probability that the random varaible is less than or equal to the value of x  
+$F(x) = P(X\leq x)$  
+  
+The **survival function** of a random variable X is defined as the probability that the random variable is greater than the value x  
+$S(x) = P(X > x)$  
+Notice that $S(x) = 1 - F(x)$  
+
+We can evaluate multiple quantiles at once with `pbeta`  
+```{r}
+pbeta(c(0.4, 0.5, 0.6), 2, 1)
+```
+
+### Quantile  
+The $\alpha^{th}$ **quantile** of a distribution with distribution function $F$ is the point $x_\alpha$ such that $F(x_\alpha) = \alpha$  
+* A **percentile** is simply a quantile with $\alpha$ expressed as a percent  
+* The **median** is the $50^{th}$ percentile  
+* The `qbeta` function will take a quantile and return the value of $x_\alpha$  
+```{r}
+sqrt(.5) #Solving x^2 = 0.5 manually
+qbeta(0.5, 2, 1)
+```
+
+
+
 **Reminder to commit (02), delete this line** ***AFTER*** **committing**  
 
 ## Conditional Probability  
