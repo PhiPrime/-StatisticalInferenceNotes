@@ -159,13 +159,84 @@ sqrt(.5) #Solving x^2 = 0.5 manually
 qbeta(0.5, 2, 1)
 ```
 
-
-
-**Reminder to commit (02), delete this line** ***AFTER*** **committing**  
-
 ## Conditional Probability  
+* Conditional Probability is a probability of an event (E) given some condition (F) represented as $P(E|F)$ (Probability of E given F)  
+* The probability of a die landing on 1 is 1/6, however the probability of a die landing on a 1 *given* the die landed on an odd number is 1/3  
+* The general formula for conditional probability is $P(A|B) = \frac{P(A \bigcap B)}{P(B)}$  
+
+
 ## Bayes' rule  
+* Named after **[Thomas Bayes](http://en.wikipedia.org/wiki/Thomas_Bayes)**  
+* Used to find $P(B|A)$ when one knows $P(A|B)$, however one also has to know $P(B)$ and $P(B^c)$  
+$P(B|A) = \frac{P(A|B)P(B)}{P(A|B)P(B) + P(A|B^c)P(B^c)}$  
+
+### Diagnostic Tests  
+Bayes' rule is useful in diagnostic tests  
+* Let $+$ and $-$ be the events that the result of a diagnostic test is positive or negative repectively  
+* Let $D$ and $D^c$ be the event that the subject of the test has or does not have the disease repectively  
+* Then the **sensitivity** of the test can be evaluated as $P(+|D)$, the probability the test is positive given the subject has the disease  
+* Likewise, the **specificity** of the test is evaluated as $P(-|D^c)$, the probability the test is negative given the subject does not have the disease  
+        + A good test has high specificity  
+* **Positive predictive value** - probability of having a disease given a positive test, $P(D|+)$  
+* **Negative predictive value** - probability of not having the disease given a negative test, $P(D^c|-)$  
+* **Prevalence of the disease** - just the probability of having the disease, $P(D)$  
+
+Example:  
+Say there is a test for HIV such that it has...  
+* a sensitivity of 99.7%; $P(+|D) = 0.997$  
+* a specificity of 98.5%; $P(-|D^c) = 0.985$  
+* population has a prevalence of HIV of 0.1%; $P(D) = 0.001$  
+What is the associated positive predictive value, $P(D|+)$?  
+$P(D|+) = \frac{P(+|D)P(D)}{P(+|D)P(D) + P(+|D^c)P(D^c)}$  
+$P(D|+) = \frac{0.997*0.001}{0.997*0.001+(1-P(-|D^c))*(1-P(D))}$  
+0.997 * 0.001 = `r 0.997*0.001`  
+$P(D|+) = \frac{0.000997}{0.000997 + (1-0.985)*(1-0.001)}$  
+1-0.985 = `r 1-0.985`  
+1-0.001 = `r 1-0.001`  
+0.015 * 0.999 = `r 0.015*0.999`  
+$P(D|+) = \frac{0.000997}{0.000997 + 0.014985}$  
+$P(D|+) = \frac{0.000997}{0.000997 + 0.014985}$  
+$P(D|+) = \frac{0.000997}{0.015982}$  
+$P(D|+) = 0.06238...$  
+So the positive predictive value is about 6.2%  
+  
+The low prevalence in the population is the reason for the low positive predictive value. 
+  
+We can also look at the probability of not having the disease given a positive test,  
+$P(D^c|+) = \frac{P(+|D^c)P(D^c)}{P(+|D^c)P(D^c) + P(+|D)P(D)}$  
+It can be seen that the denominator is equivalent to the denominator is $P(D|+)$ through the communitative property  
+$P(D^c|+) = \frac{P(+|D^c)P(D^c)}{P(+|D)P(D)+P(+|D^c)P(D^c)}$
+as such we can evaluate this as so:  
+$P(D^c|+) = \frac{(1-P(-|D^c))(1-P(D))}{0.015982}$  
+$P(D^c|+) = \frac{(1-0.985)(1-0.001)}{0.015982}$  
+1-0.985 = `r 1-0.985` ; 1-0.001 = `r 1-0.001`
+0.015 * 0.999 = `r 0.015*0.999`  
+$P(D^c|+) = \frac{0.014985}{0.015982}$  
+$P(D^c|+) = 0.9376...$  
+  
+### Likelihood Ratio  
+But we are more interested in the **likelihood ratio**, that is given a positive test how does this increase your "*odds*" of having the disease.
+* **odds** are the ratio of $\frac{P(E)}{P(E^c)}$  
+  
+In the case of the example we'd want to find the Diagnostic likelihood ratio for a positive test result; how does getting a positive result affect your odds. This would be expressed as such:  
+$\frac{P(D|+)}{P(D^c|+)}$  
+Since the denominators of these two are equivalent this would simplify to:  
+$\frac{P(+|D)}{P(+|D^c)} * \frac{P(D)}{P(D^c)}$  
+The first expression is your Diagnostic Likelihood Ratio, the value your pre-test odds, $\frac{P(D)}{P(D^c)}$ ,are multiplied by for recieving a positive test result.  
+
+$DLR_+ = \frac{0.997}{(1-0.985)} \approx 66$  
+Meaning that the odds of you having the disease after a positive test result is 66 times more than before the test.
+
+
 ## Independence  
+Event A is independent of event B if $P(A|B) = P(A)$ where $P(B) > 0$  
+As well as if $P(A \cap B) = P(A)P(B)$  
+As such $P(A_1 \cap A_2)$ if & only if $A_1$ and $A_2$ are independent events  
+* **Independent Identically Distributed (iid)** - random variables that are independent and identically distribtued  
+        + Independent - statistically unrelated from one and another  
+        + Identically distributed - all having been drawn from the same population distribution  
+* iid random variables are the default model for random samples  
+
 **Reminder to commit (03), delete this line** ***AFTER*** **committing**  
 
 ## Expected values  
