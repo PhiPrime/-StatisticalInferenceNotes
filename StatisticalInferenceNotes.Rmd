@@ -48,6 +48,8 @@ Here's all four homeworks as interactive web pages (it's probably better to just
 * **[HW 3](http://bcaffo.github.io/courses/06_StatisticalInference/homework/hw3.html#1)**  
 * **[HW 4](http://bcaffo.github.io/courses/06_StatisticalInference/homework/hw4.html#1)**  
 
+
+
 # Probability & Expected Values  
 ## Introduction to Probability  
 ### Intro  
@@ -69,6 +71,8 @@ Specifically, probability takes a possible outcome from the experiment and:
 * If an event **A** implies the occurrence of event **B**, then the probability of **A** occuring is less than or equal to the probability that **B** occurs  
 * For any two events the probability that at least one occurs is the sum of thier probabilites minus their intersection (`P(E|F) = P(E)+P(F)-P(E&F)`)  
 
+## Lesson with `swirl()`: Introduction  
+(No new content)
 
 
 ## Probability mass functions  
@@ -89,6 +93,9 @@ Some examples of variables that can be seen as random variables
 * The hypertension status of a subject randomly drawn from a population (binomial discrete variable)  
 * The number of people who click on an ad (discrete; poisson)  
 * Intelligence quotients for a sample of children (continous)  
+
+## Lesson with `swirl()`: Probability1  
+(No new content. Went over some basic probability situations, such as drawing cards from a deck)  
 
 ### PMF  
 * A **Probability mass function** evaluated at a value corresponds ot the probability that a random variable takes that value. To be a valid pmf a function, $p$, must satisfy:  
@@ -159,10 +166,20 @@ sqrt(.5) #Solving x^2 = 0.5 manually
 qbeta(0.5, 2, 1)
 ```
 
+## Lesson with `swirl()`: Probability2  
+* Continous random variables are usually associated with measurements of time, disance, or some biological process that can take any value  
+  + Limitations of precision in taking the measurements may imply the values are discrete, but we consider them continuous.  
+* A sample median is an estimato of a population median (the estimand)  
+
+
+
 ## Conditional Probability  
 * Conditional Probability is a probability of an event (E) given some condition (F) represented as $P(E|F)$ (Probability of E given F)  
 * The probability of a die landing on 1 is 1/6, however the probability of a die landing on a 1 *given* the die landed on an odd number is 1/3  
 * The general formula for conditional probability is $P(A|B) = \frac{P(A \bigcap B)}{P(B)}$  
+
+
+
 
 
 ## Bayes' rule  
@@ -227,6 +244,15 @@ The first expression is your Diagnostic Likelihood Ratio, the value your pre-tes
 $DLR_+ = \frac{0.997}{(1-0.985)} \approx 66$  
 Meaning that the odds of you having the disease after a positive test result is 66 times more than before the test.
 
+## Lesson with `swirl()`: Conditional Probability  
+* $P(B|A) = \frac{P(B\cap A)}{P(A)} = P(A|B) * \frac{P(B)}{P(A)}$  
+  + This is a simple form of Bayes' rule  
+* Suppose we don't know $P(A)$, but only know its conditional probabilities, $P(A|B)$ and $P(A|B^c)$  
+  + We could deduce $P(A) = P(A|B) * P(B) + P(A|B^c) * P(B^c)$ since this would essentially be the sum of $P(A\cap B) + P(A\cap B^c)$ which with discrete mathematics would be reduced to just $P(A)$ since it's the intersection of A with all of B and all of *not* B, resulting in only A.
+  + This is why $P(A|B) * P(B) + P(A|B^c) * P(B^c)$ is the denominator in Bayes' rule  
+  
+
+
 
 ## Independence  
 Event A is independent of event B if $P(A|B) = P(A)$ where $P(B) > 0$  
@@ -237,14 +263,70 @@ As such $P(A_1 \cap A_2)$ if & only if $A_1$ and $A_2$ are independent events
         + Identically distributed - all having been drawn from the same population distribution  
 * iid random variables are the default model for random samples  
 
-**Reminder to commit (03), delete this line** ***AFTER*** **committing**  
 
 ## Expected values  
+* Another term for the pop. mean of a random variable  
+* The sample mean can be thought of as the center of mass of data if each data point is equally likely  
+* However, since not all points are equally likely the mean is found by getting the expected value of each discrete variable  
+```{r}
+PMtable <- data.frame(value = c(0:4), prob = c(0.1,0.15,0.4,0.25,0.1))
+PMtable
+#We can see this is a valid dist. since the probabilites sum to 1
+sum(PMtable$prob)
+#To get the mean we can get the expected value of each variable...
+EVs <- PMtable$value * PMtable$prob
+PMtable <- cbind(PMtable, EVs)
+PMtable
+#Then take the sum of the Expected values
+sum(PMtable$EVs)
+
+#This is the same as if we had a sample population with a rel. freq
+#that is the same as the probabilities
+rFreq <- PMtable$prob*100
+sample <- c(rep(0, rFreq[1]), 
+            rep(1, rFreq[2]), 
+            rep(2, rFreq[3]), 
+            rep(3, rFreq[4]), 
+            rep(4, rFreq[5]))
+mean(sample)
+```
+
+The population mean, denoted $E[X]$, represents the center of mass for a collection of locations, $x$, and weights, $p(x)$  
+$E[X] = \sum_{x} xp(x)$  
+  
+
 ## Expected values, simple examples  
+* The expected value can be a value that the discrete variables can't take, but represents the center of mass of the areas of each results' probabilities  
+* In an example for a die the expected value would be:  
+```{r}
+die <- data.frame(value = 1:6, prob = rep(1/6,6))
+sum(die$value*die$prob)
+```
+  
+  
 ## Expected values for PDFs  
+* Similar to the PMF the pop. mean of the PDF is akin to the center of mass of it's density function  
+* The sample mean will be centered on the same as the original, population mean.  
+        + When this occurs, the sample mean is said to be **unbiased** because its distribution is centered at what it's trying to estimate  
+        
+* I made **[a good graph on desmos](https://www.desmos.com/calculator/cwfppuhrqz)** that helps visualize this back when I was tutoring. As the sample size increases the probability of the sample mean equaling the population mean tends towards 100%  
+
+### Summary  
+* Expected values are properties of distibutions  
+* The population mean is the center of mass of population  
+* The sample mean is the center of mass of the observed data  
+* The sample mean is an estimate of the population mean  
+* The sample mean is unbiased  
+        + The population mean of its distribution is the mean that it's trying to estimate  
+* The more data that goes into the sample mean, the more concentrated its density / mass function is around the population mean  
+
+## Lesson with `swirl()`: Expectations  
+(No new content)
+
+
 **Reminder to commit (04), delete this line** ***AFTER*** **committing**  
 
-## Lessons with `swirl()`  
+
 ## Quiz 1  
 **Reminder to commit (S1), delete this line** ***AFTER*** **committing**  
 
