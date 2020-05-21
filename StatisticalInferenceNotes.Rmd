@@ -206,11 +206,11 @@ Say there is a test for HIV such that it has...
 What is the associated positive predictive value, $P(D|+)$?  
 $P(D|+) = \frac{P(+|D)P(D)}{P(+|D)P(D) + P(+|D^c)P(D^c)}$  
 $P(D|+) = \frac{0.997*0.001}{0.997*0.001+(1-P(-|D^c))*(1-P(D))}$  
-0.997 * 0.001 = `r 0.997*0.001`  
+0.997 * 0.001 = $`r 0.997*0.001`$  
 $P(D|+) = \frac{0.000997}{0.000997 + (1-0.985)*(1-0.001)}$  
-1-0.985 = `r 1-0.985`  
-1-0.001 = `r 1-0.001`  
-0.015 * 0.999 = `r 0.015*0.999`  
+1-0.985 = $`r 1-0.985`$  
+1-0.001 = $`r 1-0.001`$  
+0.015 * 0.999 = $`r 0.015*0.999`$  
 $P(D|+) = \frac{0.000997}{0.000997 + 0.014985}$  
 $P(D|+) = \frac{0.000997}{0.000997 + 0.014985}$  
 $P(D|+) = \frac{0.000997}{0.015982}$  
@@ -226,8 +226,8 @@ $P(D^c|+) = \frac{P(+|D^c)P(D^c)}{P(+|D)P(D)+P(+|D^c)P(D^c)}$
 as such we can evaluate this as so:  
 $P(D^c|+) = \frac{(1-P(-|D^c))(1-P(D))}{0.015982}$  
 $P(D^c|+) = \frac{(1-0.985)(1-0.001)}{0.015982}$  
-1-0.985 = `r 1-0.985` ; 1-0.001 = `r 1-0.001`
-0.015 * 0.999 = `r 0.015*0.999`  
+1-0.985 = $`r 1-0.985`$ ; 1-0.001 = $`r 1-0.001`$
+0.015 * 0.999 = $`r 0.015*0.999`$  
 $P(D^c|+) = \frac{0.014985}{0.015982}$  
 $P(D^c|+) = 0.9376...$  
   
@@ -357,26 +357,160 @@ pregGivenPos
 ```
 
 
-**Reminder to commit (S1), delete this line** ***AFTER*** **committing**  
 
 # Variability, Distribution, & Asymptotics  
 ## Introduction to Variability  
-## Variance Simulation Examples  
+* Variability is a measuremnt of a sample's variability  
+* Often we consider the square root of population variability and sample variance, called the standard deviation  
+  + This is done beecuase the std. dev. has the same units as the population (i.e. if the population is a length in meters, the standard deviation is also in meters (whereas the variance is in meters$^2$))  
+* The variance is the sum of the differences of each data point to the mean, squared. 
+  + $Var(X) = E [(X-\mu)^2] = E[X^2]-E[X]^2$  
+  
+Die Example:
+```{r echo = FALSE}
+options(scipen = 999)
+```
+
+```{r} 
+#The following wasn't allowing the pdf to compile and I'm just over it
+  # E[X] = 3.5$  
+  #  E[X^{2}] = 1^{2} * \frac{1}{6} + 2^{2} * \frac{1}{6} + 3^{2}...
+  # * \frac{1}{6} + 4^{2} * \frac{1}{6} + 5^{2} * \frac{1}{6}...
+  # + 6^{2} * \frac{1}{6} = ...  
+```
+```{r}
+expectedXsquared <- round((1^2+2^2+3^2+4^2+5^2+6^2)*1/6, 2)
+expectedX <- sum(1:6*1/6)
+```
+= $`r expectedXsquared`$
+
+Var(X) = expectedXsquared - expectedX$^2$ = $`r expectedXsquared - expectedX^2`$
+
+* As the variance increases in a normal distribution the curve will flatten as the values are spread more about the mean  
+
+* The **sample variance** is the sum of the variation from the mean squared of each data point, then divided by $n-1$  
+  + $S^2 = \frac{\Sigma_{i-1}(X_i-\bar{X})}{n-1}$  
+  + When taking a sample and measuring the variance we are estimating the population's variance. Since the sample is likely to miss outliers in the population, dividing by $n-1$ increases the value of the variaence, and gets a better estimate of the true population variance. If a sample of a population is taken where the population mean is known, the variancce calculated with the sample mean will always be smaller than the variance calculated with the population mean; since the sample mean will always be generally closer to the sample. Dividing by $n-1$ couteracts this downward bias.
+  
+
+
+
+
+## Variance Simulation Examples
+```{r warning=FALSE}
+set.seed(1618033)
+library(tidyverse)
+ten <- replicate(1618, sd(sample(1:6, 10, TRUE)))
+twenty <- replicate(1618, sd(sample(1:6, 20, TRUE)))
+thirty <- replicate(1618, sd(sample(1:6, 30, TRUE)))
+data <- rbind(cbind(ten, rep("10", length(ten))),
+              cbind(twenty, rep("20", length(twenty))),
+              cbind(thirty, rep("30", length(thirty))))
+data <- as.tbl(data.frame(data))
+data <- rename(data, Standard.Deviation = ten, n = V2) %>%
+            mutate(n = as.factor(n), 
+                   Standard.Deviation =
+                     as.numeric(as.character(Standard.Deviation)))
+plot <- ggplot(data, aes(Standard.Deviation)) + 
+  geom_histogram(binwidth = 0.15)  +
+  facet_wrap(n~.) +
+  geom_vline(xintercept = sqrt(2.92), col = "#FF0000")
+plot
+
+```
+
+The above code shows the distribution of the standard deviation (sqrt(variance)) for a sample of dice rolls, sample size is 10, 20, and 30. It can be seen that with all samples the mean of the standard deviations tends towards the true population mean that we are estimating with each sample. The sd's get more concentrated around the true pop. sd as the samples are comprised of more dice per sample.
+
 ## Standard Error of the Mean  
+* The variance of the sample mean is the population variance divided by the sample size  
+  + $\sigma^2/n$  
+* As such the standard deviation of the sample mean, **the standard error**, is the population standard deviation divided by the square root of the sample size  
+  + $\sigma/\sqrt{n}$  
+* The mean of the sample mean is equivelant to the population mean  
+  
+### Simulations  
+```{r}
+set.seed(1618033)
+numSims <- 10000
+n <- 10
+sd(apply(matrix(#v# 1 param indicates the pop sd
+  rnorm(numSims * n), numSims), 1, mean))
+1/sqrt(n)
+```
+```{r}
+sd(apply(matrix(# runif is a uniform distribution
+  runif(numSims * n), numSims), 1, mean))
+#standard uniform distributions have a variance of 1/12
+#sqrt(1/12)/sqrt(n) = 1/sqrt(12*n)
+1/sqrt(12 * n)
+```
+```{r}
+#Poisson(4) have a variance of 4; so a random sample of 
+#n Poisson(4) have a sd of 2/sqrt(n)
+sd(apply(matrix(rpois(numSims * n, 4), numSims), 1, mean))
+2/sqrt(n)
+```
+```{r}
+#Fair coin flips have variance of 0.25, so a random sample of
+#n coin flips have sd of 1/sqrt(4*n) or 1/(2*sqrt(n))
+sd(apply(matrix(sample(0:1, numSims * n, replace = TRUE), 
+                numSims), 1, mean))
+1/(2*sqrt(n))
+```
+
+
 ## Variance Data Example  
+```{r message = FALSE}
+library(UsingR)
+```
+```{r}
+data(father.son)
+x <- father.son$sheight
+n <- length(x)
+
+plot <- ggplot(father.son, aes(sheight)) +
+  geom_histogram(aes(y = ..density..), binwidth = 1, 
+                 fill = "#FF0000",colour = "#000000")
+plot + geom_density(size = 2, colour = "#000000")
+```
+  
+* The variability of this histogram estimates the variability of son's heights in the population  
+```{r}
+data.frame(Sample.Variance = var(x), Sample.SD = sd(x),
+           Variability.Of.Avg = var(x)/n, SD.Of.Avg = sd(x)/sqrt(n))
+```
+
+* Both `X.Of.Avg` is an estimate, but it's still the best estimate we can get given the sample data  
+
+### Summarizing What We Know About Variances  
+* The sample variance estimates the population variance  
+* The distribution fo the sample variance is centered at what its estimating  
+  + It gets more concentrated around the population variance with larger sample sizes  
+* The variance of the sample mean is the population variance divided by $n$  
+  + $Var(\bar{X}) = \sigma^2/n$  
+
+
+## Lesson with `swirl()`: Variance  
+
+* **Chebyshev's inequality** - Probability that a random variable X is *at least* k standard deviations from it's mean  
+  + $P(X < (\mu+k*\sigma)) < \frac{1}{k^2}$  
+
+
 **Reminder to commit (05), delete this line** ***AFTER*** **committing**  
 
 ## Binomial Distrubtion  
 ## Normal Distribution  
 ## Poisson  
+## Lesson with `swirl()`: CommonDistros  
 **Reminder to commit (06), delete this line** ***AFTER*** **committing**  
 
 ## Asymptotics and the Law of Large Numbers (LLN)  
 ## Asymptotics and the Central Limit Theorem (CLT)  
 ## Asymptotics and Confidence Intervals  
+## Lesson with `swirl()`: Asymptotics  
 **Reminder to commit (07), delete this line** ***AFTER*** **committing**  
 
-## Lessons with `swirl()`  
+  
 ## Quiz 2  
 **Reminder to commit (S2), delete this line** ***AFTER*** **committing**  
 
