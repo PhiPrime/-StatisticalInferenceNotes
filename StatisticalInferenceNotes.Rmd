@@ -496,12 +496,184 @@ data.frame(Sample.Variance = var(x), Sample.SD = sd(x),
   + $P(X < (\mu+k*\sigma)) < \frac{1}{k^2}$  
 
 
-**Reminder to commit (05), delete this line** ***AFTER*** **committing**  
+
+
+
 
 ## Binomial Distrubtion  
+* Formally called **The Bernoulli Distribution**, named after **[Jacob Bernoulli](https://en.wikipedia.org/wiki/Jacob_Bernoulli)** (whom sided with Leibniz).  
+* The distribution arrises from a coin flip, that may be biased  
+* Bernoulli random variables take (only) the values 1 and 0 with probabilities of $p$ and $1-p$ repectively  
+The probability mass function:    
+
+$P(X =x) = p^x(1-p)^{1-x}$  
+  
+* The mean is $p$ and the variance is $p(1-p)$  
+* A 1 is considered a "success" regardless if the case of a 1 is successful or not.  
+  
+### Binomial Trials  
+A binomial random variable is the sum of successes in a trial  
+* In specific, let $X_1,..., X_n$ be independent and identically distributed (iid) random variables of a Bernoulli distribution  
+then $X = \Sigma_{i=1}^n X_i$ is a binomial random variable  
+The PMF:    
+
+$P(X = x) = \binom{n}{x} p^x (1-p)^{n-x}$  
+  
+Note on notation:  
+$\binom{n}{x}$  
+(read as "n choose x") counts the number of ways of selecting $x$ items out of $n$ without replacement disregarding the order of the items  
+$\binom{n}{x} = \frac{n!}{x!(n-x)!}$  
+$\binom{n}{0} = \frac{n!}{0!(n-0)!} = \frac{n!}{1*n!} = 1$  
+likewise:  
+$\binom{n}{n} = \frac{n!}{n!(n-n)!} = \frac{n!}{n!*1} = 1$  
+since $0! = 1$  
+  
+### Example  
+Suppose a friend has 8 children, 7 of which are girls. If each gender has an independent 50% probability for each birth, what's the probability of getting 7 or more girls out of 8 births?  
+$\binom{8}{7}0.5^7(1-0.5)^1+\binom{8}{8}0.5^8(1-0.5)^0$  
+
+$\frac{8!}{7!(8-7)!}*0.5^7*0.5+1*0.5^8*1$
+
+$\frac{8!}{7!*1}*0.5^8+0.5^8=8*0.5^8+0.5^8$  
+
+$(8+1)*0.5^8=\frac{9}{2^8}\approx0.035$  
+  
+In R:  
+```{r}
+#Explicitly doing the formula:
+choose(8, 7) * 0.5^8 + choose(8, 8) * 0.5^8
+#Using binom function:
+pbinom(6, size = 8, prob = 0.5, lower.tail = FALSE)
+```
+
+
 ## Normal Distribution  
+* Also called a **Gaussian distribution** with a mean $\mu$ and variance $\sigma^2$  
+  + Sometimes expressed as: $X\sim N(\mu, \sigma^2)$
+* It's density is the bell curve, represented by the formula:  
+$(2\pi\sigma^2)^{-1/2}e^{-(x-\mu)^2/2\sigma^2}$  
+
+
+### Standard Normal Distribution  
+Normal Distribution when $\mu = 0$ and $\sigma = 1$  
+Standard normal random variables are often labeled $z$, which will come up when looking at *z-scores*  
+* There are a number of properties that are found using the standard normal distributions, since the values 1, 2, and 3 respectively represent $1\sigma$, $2\sigma$, and $3\sigma$.  
+  + Any Normal distribution can have these properties too just being centered at the mean (i.e. $\mu + 1\sigma$, $\mu + 2\sigma$ ...)  
+  
+### Emperical Rule  
+* The area within z * $\sigma$ from the mean represents _% of the mean:
+  + 1 : 68%  
+  + 2 : 95% (Really 1.96, but often rounded up)  
+  + 3 : 99.7%  
+
+### Z scores  
+* A z-score represents how many $\sigma$ a given point is from the mean  
+* Converting  
+  + If $X \sim N(\mu, \sigma^2)$ then $Z = \frac{X - \mu}{\sigma} ~ N(0,1)$  
+  + If $Z$ is standard normal then $X = \mu + Z\sigma ~ N(\mu,\sigma^2)$  
+Notable percentiles:  
+* **X** is the $XX^{th}$ percentile  
+  + Negatives  
+    **-2.33** : $1^{st}$  
+    **-1.96** : $2.5^{th}$  
+    **-1.645** : $5^{th}$  
+    **-1.28** : $10^{th}$  
+  + Positives  
+    **1.28** : $90^{th}$  
+    **1.645** : $95^{th}$  
+    **1.96** : $97.5^{th}$ 
+    **2.33** : $99^{th}$  
+* Remembering one set will essentially allow you to reference the other set since SND is symetric  
+  + Some off-hand mnumonics I came up with  
+    - 1.28 relates to 10% since 2+8 = 10  
+    - 1.64**5** relates to **5**%, aside from that I have the golden ratio memorized and 5% is like the statistical "golden standard",so this starts simular, **1.6**18, then half of *8* is **4** giving the **1.645** (Not the best but meh)  
+    - 97.5% is like a step up from 95%, so it's number is 1.**96**  
+    - 99th percentile has to be less than *3* standard deviations, so it must start with **2**, then 99/*3* = **33** giving the **2.33**
+    
+### Using R  
+What is the $95^{th}$ percentile of a $N(\mu,\sigma^2)$ distribution?  
+```{r}
+#v- Rough estimate of IQ data 
+mu <- 100
+std <- 18
+#Using known info from above, the 95th percentile should be 
+#1.645sd from the mean
+mu+1.645*std
+
+qnorm(0.95, mean = mu, sd = std)
+
+#Probability that an IQ is larger than 140?
+pnorm(140, mu, std, lower.tail = FALSE)
+#or
+1 - pnorm(140, mu, std)
+```
+So it can be seen the 1.645 estimate is pretty close to the truth  
+
+
+
 ## Poisson  
+* Used to model counts over a time duration  
+PMF:  
+$P(X = x; \lambda) = \frac{\lambda^xe^{-\lambda}}{x!}$  
+  
+The mean **and** variance of this distribution is $\lambda$  
+Poisson random variables are used to model rates  
+* $X\sim Poisson(\lambda t)$ where  
+  + $\lambda = E[X/t]$ is the expected count per unit of time  
+  + $t$ is the total monitoring time  
+
+
+
+### When we use Poisson  
+* Modeling count data (especially if there is no upper bound)  
+* Modeling event-time or survival data  
+  + Example: Modeling reoccurance of a system during the duration of a study  
+* Modeling contingency tables  
+  + Ex: Hair color by race  
+* Approximating binomials when $n$ is large and $p$ is small  
+  + Common in epidemiology  
+
+### Example  
+The number of people that show up at a bus stop is Poisson witha  mean of 2.5 per hour.  
+If watching the bus stop for 4 hours, what is the probability that 3 or fewer people show up for the whole time?  
+```{r}
+#Using the formula
+l <- 2.5*4
+((l^3)*exp(1)^(-l))/factorial(3) +
+  ((l^2)*exp(1)^(-l))/factorial(2) +
+  ((l^1)*exp(1)^(-l))/factorial(1) +
+  ((l^0)*exp(1)^(-l))/factorial(0)
+
+#Using the function
+ppois(3, lambda = 2.5*4)
+```
+
+### Poisson Approximation to the Binomial  
+* When $n$ is large and $p$ is small the Poisson distribution is an accurate approximation to the binomial distribution  
+* Notation  
+  + $X \sim Binomial(n,p)$  
+  + $\lambda = np$  
+  + $n$ gets large  
+  + $p$ gets small  
+  
+Example:  
+We flip a coin with success probability 0.01 five hundred times.  
+What's the probability of 2 or fewer successes?  
+
+```{r}
+pbinom(2, size = 500, prob = 0.01)
+ppois(2, lambda = 500*0.01)
+err <- abs(pbinom(2, size = 500, prob = 0.01) - 
+             ppois(2, lambda = 500*0.01))
+paste0("This has an absolute error of approximately ", round(err, 6))
+```
+
+
+
 ## Lesson with `swirl()`: CommonDistros  
+(No new content)
+
+
 **Reminder to commit (06), delete this line** ***AFTER*** **committing**  
 
 ## Asymptotics and the Law of Large Numbers (LLN)  
