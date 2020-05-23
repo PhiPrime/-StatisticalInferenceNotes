@@ -967,28 +967,180 @@ qnorm(.5, .5, (1/12)/sqrt(1000))
 ```{r}
 ppois(10, 5*3)
 ```
-
-
-**Reminder to commit (S2), delete this line** ***AFTER*** **committing**  
+ 
 
 # Intervals, Testing, & P-values  
 ## T Confidence Intervals  
+* When we estimate something using statistics, usually that estimate comes with uncertainty. Confidence intervals are a convenient way to communicate that uncertainity in estimates  
+* T confidence intervals use a $t$ value rather than a $z$ interval  
+  + $t$ intervals are better for small sample sizes, however are also sufficient for larger samples; as such its always preferred  
+ 
+### t tests 
+* were developed by William Gosset <3 (Under the pseudonym "Student", since Guiness wouldn't allow an employee to publish under their actual name)  
+* has thicker tails than the normal  
+* is indexed by a degrees of freedom; gets more like a standard normal as degrees of freedom gets larger  
+
+* It assumes that the underlying data are iid normally distributed witht he result that  
+$\frac{\bar{X}-\mu}{S/\sqrt{n}}$  
+follows Gosset's $t$ distribution with $n-1$ degrees of freedom  
+* The interval for a t-test is $\bar{X}\pm t_{n-1}S/\sqrt{n}$ where $t_{n-1}$ is the relevant quantile for the interval  
+
+### t interval  
+* The t interval technically assumes that the data are iid normal, though it is robust to this assumtion  
+* It works well whenever the distribution fo the data is roughly symmetric  
+* Paired observations are often analyzed using the t interval by taking differences (i.e. change in... cost, height, etc.)  
+* For large degrees of freedom, t quantiles becoem the same as standard normal quantiles; therefore this interval converges to the same interval as the CLT yielded  
+* For skewed distributions, the spirit of the t interval assumptions are violated  
+  + In this case, consider taking logs or using a different sumamry, like the median since centering at the mean doesn't make much sense in skewed data  
+* For highly discrete data, like binary or poisson, other intervals are more perferable  
+
 ## T Confidence Intervals Example  
+* In R, executing `data(sleep)` loads the sleep data originally analyzed in Gosset's Biometrika paper, which shows the increase in hours for 10 patients on two soporific drgus. R treats the data as two groups rather than paired  
+```{r}
+data(sleep)
+head(sleep)
+```
+```{r}
+library(RColorBrewer)
+pal <- brewer.pal(10, "Set3")
+plot <- ggplot(sleep, aes(group, extra, group = factor(ID)))
+plot + geom_line(size = 1, aes(colour = ID)) +
+  scale_colour_manual(values = pal) +
+  geom_point(size = 5, pch = 21, fill = "salmon", alpha = 0.5)
+  
+```
+* Comparison by subject allows us to better understand the changes as a medication is used  
+```{r}
+g1 <- sleep$extra[1:10]
+g2 <- sleep$extra[11:20]
+difference <- g2 - g1
+mn <- mean(difference)
+s <- sd(difference)
+n <- 10
+
+#Each of the following will give the same results for a t test
+#Just in diffrent form of output
+mn + c(-1,1)*qt(.975, n - 1) * s/sqrt(n)
+t.test(difference)
+t.test(g2, g1, paired = TRUE)
+#Outcome `extra` is a function of the `group` and they are paired
+t.test(extra~I(relevel(group, 2)), paired = TRUE, data = sleep)
+```
+
+
 ## Independent Group T Intervals  
+* Suppose that we want to compare the mean blood pressure between two groups in a randomized trial; those who received the treatment to those who received a placebo  
+  + The randomization should balance any underlying cofactors between the two groups  
+* We cannot use the paired t test because the groups are independent and may have different sample sizes  
+We now will look at methods for comparing independent groups; x and y  
+* a $(1 - \alpha) * 100\%$ confidence interval for $\mu_y-\mu_x$ is:  
+$\bar{y}-\bar{X}\pm t_{n_x+n_y-2,1-\alpha/2}S_p(\frac{1}{n_x}+\frac{1}{n_y})^{1/2}$  
+((avg of y) - (avg of x) * (rel. t quantile {df is sum of n's - 2}) * ... )
+* The pooled variance estimator is  
+$S_p^2 = ((n_x-1)S_x^2 + (n_y-1)S_y^2)/(n_x+n_y-2)$  
+* This interval is assuming a constant variance across the two groups  
+* If there is some doubt, one can assume a different variance per group, which is covered a bit later in this section    
+
+### Pooled variance estimate  
+* Comparing blood pressure for 8 oral contraceptive users versus 21 controls  
+  + $\bar{X}_{OC} = 132.86$ mmHg with $s_{OC} = 15.34$ mmHg  
+  + $\bar{X}_{C} = 127.44$ mmHg with $s_{C} = 18.23$ mmHg  
+```{r}
+#Contructing interval by hand  
+sp <- sqrt((7*15.34^2 + 20 * 18.23^2) / (8 + 21 -2))
+(132.86 - 127.44) + c(-1, 1) * qt(.975, df = 27) * sp * (1/8 + 1/21)^.5
+```
+* Make sure to subtract correctly, your study group minus the control  
+* Since the interval contains 0 we can not rule out 0 as the population mean for the two groups  
+
+```{r}
+## Treating the sleep data as if they aren't matched
+n1 <- length(g1)
+n2 <- length(g2)
+sp <- sqrt( ((n1 - 1) * sd(g1)^2 + (n2-1) * sd(g2)^2) / (n1 + n2 - 2))
+md <- mean(g2) - mean(g1)
+semd <- sp * sqrt(1 / n1 + 1 / n2)
+results <- rbind(
+  md + c(-1, 1) * qt(.975, n1 + n2 - 2) * semd,
+  t.test(g2, g1, paired = FALSE, var.equal = TRUE)$conf,
+  t.test(g2, g1, paired = TRUE)$conf
+)
+rownames(results) <- c("Unpaired by Hand", "Unpaired Calculated", "Correctly Paired")
+results
+```
+* It can be seen here that ignoring pairing would lead to a Type 2 error  
+
+### ChickWeight Example  
+```{r message = FALSE}
+library(datasets)
+library(reshape2)
+data(ChickWeight)
+##define weight gain or loss
+wideCW <- dcast(ChickWeight, Diet + Chick ~ Time, value.var = "weight")
+names(wideCW)[-(1:2)] <- paste0("time", names(wideCW)[-(1:2)])
+wideCW <- mutate(wideCW, gain = time21 - time0)
+
+plot <- ggplot(ChickWeight, aes(Time, weight, colour = Diet, group = Chick))
+plot <- plot + geom_line() +
+  stat_summary(aes(group = 1), geom = "line", 
+               fun = mean, size = 1, col = "black") +
+  facet_grid(. ~ Diet)
+plot
+```
+* It appears Diet 1 has a slower weight gain than Diet 4, however we can view this better in a proper test  
+
+```{r}
+#t test can only compare two sets
+wideCW14 <- subset(wideCW, Diet %in% c(1,4))
+results <- rbind(
+  t.test(gain ~ Diet, paired = FALSE, 
+         var.equal = TRUE, data = wideCW14)$conf,
+  t.test(gain ~ Diet, paired = FALSE, 
+         var.equal = FALSE, data = wideCW14)$conf
+)
+rownames(results) <- c("Variance Equal", "Variance Unequal")
+results
+```
+* In both cases the intervals are below 0, suggesting diet 1 causes less weight gain than diet 4  
+
 ## A Note on Unequal Variance  
+* Unequal Variance does not follow a t curve, however it can be approximated with  
+$\bar{Y}-\bar{X}\pm t_{df}\times (\frac{s_x^2}{n_x}+\frac{s_y^2}{n_y})^{1/2}$
+where degrees of freedom are calculated with the following  
+$df = \frac{(S_x^2/n_x+S_y^2/n_y)^2}{(\frac{S_x^2}{n_x})^2/(n_x-1)+(\frac{S_y^2}{n_y})^2/(n_y-1)}$  
+
+* When dealing with unequal variance setting the param `var.equal` to FALSE will suffice  
+
+### Example  
+Comparing Blood Pressure for 8 oral contraceptive users versus 21 controls  
+* $\bar{X}_{OC} = 132.86$ mmHg with $s_{OC} = 15.34$ mmHg  
+* $\bar{X}_{C} = 127.44$ mmHg with $s_{C} = 18.23$ mmHg  
+* $df = 15.04$, $t_{15.04,0.975} = 2.13$  
+```{r}
+#Interval by hand 
+132.86 - 127.44 + c(-1, 1)*2.13*(15.34^2/8 + 18.23^2/21)^.5
+```
+
+
+## Lesson with `swirl()`: T Confidence Intervals  
+(No new content)
+
+
+
 **Reminder to commit (08), delete this line** ***AFTER*** **committing**  
 
 ## Hypothesis Testing  
 ## Example of Choosing a Rejection Region  
 ## T Tests  
 ## Two Group Testing  
+## Lesson with `swirl()`: Hypothesis Testing  
 **Reminder to commit (09), delete this line** ***AFTER*** **committing**  
 
 ## P-Values  
 ## P-Value Further Examples  
+## Lesson with `swirl()`: P Values  
 **Reminder to commit (10), delete this line** ***AFTER*** **committing** 
 
-## Lessons with `swirl()`  
 ## Quiz 3  
 **Reminder to commit (S3), delete this line** ***AFTER*** **committing**  
 
