@@ -371,13 +371,16 @@ Die Example:
 options(scipen = 999)
 ```
 
-```{r} 
-#The following wasn't allowing the pdf to compile and I'm just over it
-  # E[X] = 3.5$  
-  #  E[X^{2}] = 1^{2} * \frac{1}{6} + 2^{2} * \frac{1}{6} + 3^{2}...
-  # * \frac{1}{6} + 4^{2} * \frac{1}{6} + 5^{2} * \frac{1}{6}...
-  # + 6^{2} * \frac{1}{6} = ...  
-```
+
+
+$E[X] = 3.5$  
+
+$E[X^{2}]=1^{2}*\frac{1}{6}+2^{2}*\frac{1}{6}+3^{2}$ ... 
+
+... $*\frac{1}{6}+4^{2}*\frac{1}{6}+5^{2}*\frac{1}{6}$ ...
+
+... $+ 6^{2}*\frac{1}{6}=$ ...  
+
 ```{r}
 expectedXsquared <- round((1^2+2^2+3^2+4^2+5^2+6^2)*1/6, 2)
 expectedX <- sum(1:6*1/6)
@@ -674,12 +677,263 @@ paste0("This has an absolute error of approximately ", round(err, 6))
 (No new content)
 
 
-**Reminder to commit (06), delete this line** ***AFTER*** **committing**  
-
 ## Asymptotics and the Law of Large Numbers (LLN)  
+* Asymptotics refers to the behavior of estimators as the sample size goes to infinity. 
+  + In statistics we'll be concerned with as the sample size tends to infinity  
+* Asymptotics are useful for simple statistical inference and approximations  
+* Asymptotics form the baiss for frequency interpretation of probabilities  
+  + If you flip a coin, the proportion of heads should approach .5 as your sample size approaches infinity  
+    - **[Count Buffon](https://en.wikipedia.org/wiki/Georges-Louis_Leclerc%2C_Comte_de_Buffon)** tossed a coin 4040 times. Result: 2048 heads, a proportion of 0.5069 for heads  
+    - **[Karl Pearson](https://en.wikipedia.org/wiki/Karl_Pearson)** *heroically* tossed a coin 24000 times. Result: 12012 heads, a proportion of 0.5005  
+    - **[John Kerrich](https://en.wikipedia.org/wiki/John_Edmund_Kerrich)**, while imprisoned by Germans durring WW2 tossed a coin 10000 times. Result: 5067 heads, a proportion of 0.5067
+
+### Law of Large Numbers  
+* The average limits to what its estiamting, the population  
+* Example $\bar{X}_n$ could be the average of the result of $n$ coin flips  
+* As we flip a fair coin over and over, it eventually converges to the true probability of a head  
+
+### Examples  
+```{r}
+#SND
+set.seed(161803)
+n <- 1000
+means <- cumsum(rnorm(n))/(1:n)
+plot <- ggplot(data.frame(x = 1 : n, y = means), aes(x,y)) +
+  geom_line(size = 2, col = "#FF0000") + geom_hline(yintercept = 0)
+plot + labs(x = "Number of obs.", y = "Cumulative mean")
+```
+
+* It can be seen here that with smaller observations the cum. mean varries greatly, but as the observations increase the mean starts to trend near 0, the expected value of a SND.  
+
+```{r}
+#Flipping a coin
+set.seed(16)
+n <- 1000
+means <- cumsum(sample(0:1, n, replace = TRUE))/(1:n)
+plot <- ggplot(data.frame(x = 1 : n, y = means), aes(x,y)) +
+  geom_line(size = 2, col = "#FF0000") + geom_hline(yintercept = 0.5)
+plot + labs(x = "Number of obs.", y = "Cumulative mean")
+```
+
+* Again here, we can see large variablity in small observations then it approaches the assymptote of 0.5 as the observations increase
+
+### Summary  
+* An estimator is **consistent** if it converges to what you want to estimate  
+* The LLN says that the sample mean of iid samples is consistent for the population mean  
+* Typically, good estimators are consistent; if we collect an infinite amount of data we would get the right answer  
+
+
+
 ## Asymptotics and the Central Limit Theorem (CLT)  
+* CLT states that the distribution of averages is often normal, even if the distribution that the data is being sampled from is very non-normal  
+  + This helps us create stategies for creating statistical inferences when we're not willing to assume much about the generating mechanism of our data.  
+
+CLT as a formula:  
+$\frac{\bar{X}_n-\mu}{\sigma/\sqrt{n}}=\frac{\sqrt{n}(\bar{X}_n-\mu)}{\sigma}$  
+
+$\frac{Estimate - Mean~of~estimate}{Std.~Err.~of~estimate}$  
+
+... will have a distribution like that of a standard normal for large $n$.  
+* A way to think about the CLT is that $\bar{X}_n$ is approximately $N(\mu,\sigma^2/n)$  
+
+### Example  
+```{r}
+##Flipping an unfair coin
+set.seed(1618)
+nosim <- 1000
+pHeads <- 0.9
+cfunc <- function(x, n) {sqrt(n)*(mean(x)-pHeads)}/ sqrt(pHeads*(1-pHeads))
+data <- data.frame(
+  x = c(apply(matrix(sample(0:1, prob = c(1 - pHeads, pHeads), nosim * 10,
+                            replace = TRUE), nosim), 1, cfunc, 10),
+        apply(matrix(sample(0:1, prob = c(1 - pHeads, pHeads), nosim * 20,
+                            replace = TRUE), nosim), 1, cfunc, 20),
+        apply(matrix(sample(0:1, prob = c(1 - pHeads, pHeads), nosim * 30,
+                            replace = TRUE), nosim), 1, cfunc, 30)
+        ),
+  size = factor(rep(c(10, 20, 30), rep(nosim, 3))))
+
+plot <- ggplot(data, aes(x, fill = size)) +
+  geom_histogram(binwidth = 0.3, colour = "#000000", aes(y = ..density..)) +
+  facet_grid(. ~ size)
+plot + stat_function(fun = dnorm, size = 2)
+```
+* In the smaller groups some of the discrete-ness of data can be seen, nevertheless as the samples grow in size it can be seen that the distributions more closely match the underlying normal distribution  
+
+* The **[Galton Board](https://en.wikipedia.org/wiki/Bean_machine)** simulates the central limit theorem with a binomial distribution.  
+
+
 ## Asymptotics and Confidence Intervals  
+* The probability $\bar{X}$ is bigger than $\mu+2\sigma/\sqrt{n}$ or maller than $\mu-2\sigma/\sqrt{n}$ is 5%; in other words, the probability $\bar{X}$ is within that range is 95%  
+* As such, a 95% interval for $\mu$ is $\bar{X}\pm2\sigma/\sqrt{n}$  
+  + If we were to repeatitly collect a sample in about 95% of the cases this interval would contain $\mu$  
+  
+### Example  
+```{r message = FALSE}
+library(UsingR)
+data(father.son)
+```
+```{r}
+x <- father.son$sheight  
+#Mean \pm the 97.5% quantile*sd/\sqrt{n}
+interval <- (mean(x) + c(-1,1)*qnorm(0.975)*sd(x)/sqrt(length(x)))
+#Convert result to feet
+feetint <- round(interval*1/12, 3)
+feetint
+```
+* we could say that we are 95% confident that the population mean height of sons from the population the data is drawn from is between `r feetint[1]` and `r feetint[2]` feet.  
+
+In a random sample of 100 likely voters, 56 intent to vote for your canidate  
+  + Can you relax? Do you have this race "in the bag"?  
+```{r}
+#Executing formula
+0.56 + c(-1,1) * qnorm(0.975) * sqrt(0.56 * 0.44/100)
+
+#Using R function
+binom.test(56, 100)$conf.int
+```
+* Since the interval goes below 0.50 you can't relax and ought to do more campaigning  
+* `binom.test` is exact, as it does some additional computations that aren't normally done by hand. Also tends to have wider intervals  
+
+Simulation to check confidence intervals  
+```{r}
+set.seed(1618)
+n <- 20 #Flips per simulation
+pvals <- seq(0.1, 0.9, by = 0.05) #'p's we'll check with
+nosim <- 1000
+coverage <- sapply(pvals, function(p){
+  phats <- rbinom(nosim, prob = p, size = n)/n #point estimates
+  ll <- phats - qnorm(0.975) * sqrt(phats * (1 - phats)/n)
+  ul <- phats + qnorm(0.975) * sqrt(phats * (1 - phats)/n)
+  mean(ll < p & ul > p) #Check proportion of times the true p is in the range
+})
+ggplot(data.frame(pvals, coverage), aes(pvals, coverage)) +
+  geom_line(size = 2, color = "#FF0000") +
+  geom_hline(yintercept = 0.95) +
+  ylim(0.75, 1)
+```
+* Since `n` is small the coverage is often giving lower than 95% confidence  
+
+```{r}
+#Larger n value
+set.seed(1618033)
+n <- 100 #Flips per simulation
+pvals <- seq(0.1, 0.9, by = 0.05) #'p's we'll check with
+nosim <- 1000
+coverage <- sapply(pvals, function(p){
+  phats <- rbinom(nosim, prob = p, size = n)/n #point estimates
+  ll <- phats - qnorm(0.975) * sqrt(phats * (1 - phats)/n)
+  ul <- phats + qnorm(0.975) * sqrt(phats * (1 - phats)/n)
+  mean(ll < p & ul > p) #Check proportion of times the true p is in the range
+})
+ggplot(data.frame(pvals, coverage), aes(pvals, coverage)) +
+  geom_line(size = 2, color = "#FF0000") +
+  geom_hline(yintercept = 0.95) +
+  ylim(0.75, 1)
+```
+
+### Agresti/Coull interval  
+* A quick fix for when $n$ isn't large enough for the CLT to be applicable for many of the values of $p$  
+* Add two successes and failures
+$\frac{X+2}{n+4}$  
+* An advantage of this procedure is that it does not strongly depend upon the value of n and/or p, and was recommended by Agresti and Coull for virtually all combinaitons of n and p  
+* **[Further Reading](https://www.itl.nist.gov/div898/software/dataplot/refman2/auxillar/agcoulci.htm)**
+
+Looking at the $n = 20$ example again  
+```{r}
+set.seed(1618)
+n <- 20 #Flips per simulation
+pvals <- seq(0.1, 0.9, by = 0.05) #'p's we'll check with
+nosim <- 1000
+coverage <- sapply(pvals, function(p){
+  phats <- (rbinom(nosim, prob = p, size = n) + 2)/(n + 4) #point estimates
+  ll <- phats - qnorm(0.975) * sqrt(phats * (1 - phats)/n)
+  ul <- phats + qnorm(0.975) * sqrt(phats * (1 - phats)/n)
+  mean(ll < p & ul > p) #Check proportion of times the true p is in the range
+})
+ggplot(data.frame(pvals, coverage), aes(pvals, coverage)) +
+  geom_line(size = 2, color = "#FF0000") +
+  geom_hline(yintercept = 0.95) +
+  ylim(0.75, 1)
+```
+* In this simulation, after applying the Agresti/Coull interval, there are no pvals that result in the CI dipping below 95%  
+
+### Poisson interval  
+A nuclear pump failed 5 times out of 94.32 days, give a 95% confidence interval for the failure rate per day  
+* $X\sim Poisson(\lambda t)$  
+* Estimate $\hat{\lambda} = X/t$  
+* $Var(\hat{\lambda}) = \lambda / t$  
+* $\hat{\lambda} / t$ is our variance estimate  
+```{r}
+x <- 5
+t <- 94.32
+lambda <- x/t
+
+#Using the formula
+round(lambda + c(-1, 1) * qnorm(0.975) * sqrt(lambda/t), 5)
+
+#Using R function
+round(poisson.test(x, T = 94.32)$conf, 5)
+```
+* The function gives a more conservative estimate as it's more exact from doing some additional computations to guarentee the coverage  
+
+Simulating the Poisson Coverage Rate  
+```{r}
+set.seed(1618)
+lambdavals <- seq(0.005, 0.1, by = 0.01)
+nosim <- 1000
+t <- 100
+coverage <- sapply(lambdavals, function(lambda) {
+  lhats <- rpois(nosim, lambda = lambda*t)/t
+  ll <- lhats - qnorm(0.975) * sqrt(lhats/t)
+  ul <- lhats + qnorm(0.975) * sqrt(lhats/t)
+  mean(ll < lambda & ul > lambda)
+})
+ggplot(data.frame(lambdavals, coverage), aes(lambdavals, coverage)) +
+  geom_line(size = 2, colour = "#FF0000") +
+  geom_hline(yintercept = 0.95) +
+  ylim(0, 1)
+```
+* It can be seen above that the coverage is really bad for smaller values of lambda  
+  
+When $t$ is larger the coverage is better, but still really bad for smalelr values of lambda  
+```{r}
+set.seed(1618)
+lambdavals <- seq(0.005, 0.1, by = 0.01)
+nosim <- 1000
+t <- 1000
+coverage <- sapply(lambdavals, function(lambda) {
+  lhats <- rpois(nosim, lambda = lambda*t)/t
+  ll <- lhats - qnorm(0.975) * sqrt(lhats/t)
+  ul <- lhats + qnorm(0.975) * sqrt(lhats/t)
+  mean(ll < lambda & ul > lambda)
+})
+ggplot(data.frame(lambdavals, coverage), aes(lambdavals, coverage)) +
+  geom_line(size = 2, colour = "#FF0000") +
+  geom_hline(yintercept = 0.95) +
+  ylim(0, 1)
+```
+
+### Summary  
+* The LLN states that averages of iid samples converge tot eh popualiton means that they are estimating  
+* The CLT states that averages are approximately normal, with
+  + distributions centered at the population mean  
+  + standard deviation equal to the standard error of the mean  
+* CLT gives no guarantee that $n$ is large enough  
+* Taking the mean and $\pm$ the relevant normal quantile times the standard error yields a confidence interval for the mean  
+  + $\pm$ 2 standard errors works for 95% intervals  
+* Confidence intervals get wider as the coverage increases
+  + Being more confident that the mean is included means more values are included in the interval  
+* The Poisson and binomial cases have exact intervals that don't require the CLT  
+  + But a quick fix for small sample size binomial calculations si to add 2 successes and failures  
+
+
 ## Lesson with `swirl()`: Asymptotics  
+(No new content)
+
+
+
+
 **Reminder to commit (07), delete this line** ***AFTER*** **committing**  
 
   
