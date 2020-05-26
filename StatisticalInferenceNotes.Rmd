@@ -1241,14 +1241,74 @@ results
 * The section of the tails where we would reject the null we call "the rejection region"  
 * One should never accept the null hypotheis, only fail to reject.  
 
-
-
-
-**Reminder to commit (09), delete this line** ***AFTER*** **committing**  
-
 ## P-Values  
-## P-Value Further Examples  
+* The P-value is the probability of getting data as or more extreme than the observed data in favor of the alternative. The probability is calculated assuming the null is true. 
+  + If we get a very large T-statistic the P-value answers the question "How likely would it be to get a statistic this large or larger if the null was actually true?"  
+  + As such, if the P-value is very small, then it sheds doubt on the null being true, since you actually observed a statistic that extreme  
+  
+* P-values are the msot common measure fo statistical significance  
+* Their ubiquity, along with concern over their interpretation and use makes them controversial among statisticians  
+  + Positive Arguments 
+    - **[simply statistics](http://simplystatistics.org/2012/01/06/p-values-and-hypothesis-testing-get-a-bad-rap-but-we/)**  
+    - **[normal deviate](http://normaldeviate.wordpress.com/2013/03/14/double-misunderstandings-about-p-values/)**  
+    - **[Error statistics](http://errorstatistics.com/2013/06/14/p-values-cant-be-trusted-except-when-used-to-argue-that-p-values-cant-be-trusted/)**  
+
+* **Idea**: Suppose nothing is going on behind the data, how unusual is it to see the estimate we got?  
+* **Approach**:  
+  1. Define the hypothetical distribution of a data summary (statistic) when "nothing is going on" (*null hypothesis*)  
+  2. Calculate the summary/statistic witht eh data we have (*test statistic*)  
+  3. Compare what we calculated to our hypothetical distribution and see if the value is "extreme" (*p-value*)  
+  
+* The **p-value** is the probability under the null hypothesis of obtaining evidence as extreme or more extreme than that obtained  
+* If the p-value is small, then either $H_0$ is true and we have observed a rare event or $H_0$ is false  
+* Suppose that you get a $t$ statistic of 2.5 for 15 df testing $H_0: \mu = \mu_0$ versus $H_a : \mu > \mu_0$
+  + What's the probability of getting a $t$ statistic as large as 2.5  
+```{r}
+pt(2.5, df = 15, lower.tail = FALSE)#P(t>2.5 | df = 15)
+```
+  
+### The attained significance level  
+* The attained significance level is the p-value, since it can be compared against any desired $\alpha$ level  
+* If the P-value si less than $\alpha$ you reject the null hypothesis  
+* For two sided hypothesis test, double the smaller of the two one sided hypothesis test P-values  
+  + Most software calculates the p-value for a two sided test  
+  
+## Binomial Example  
+* Suppose a friend has 8 children, 7 of which are girls and none are twins  
+* If each gender has an independent 50% probability for each birth, what's the probability of getting 7 or more girls out of 8 births  
+  + p value here is obtained with the binomial distribution  
+```{r}
+#With the formula
+choose(8,7) * 0.5^8 + choose(8,8) * 0.5^8
+#With the function
+sevOrLarger <- 
+  pbinom(6, #Since lower.tail is false we will subtract values <=6
+       size = 8, prob = 0.5, lower.tail = FALSE)  
+sevOrLarger
+#For a two tail test, p DNE 0.5
+sevOrSmaller <- pbinom(7, size = 8, prob = 0.5)
+pvals <- c(sevOrLarger, sevOrSmaller)
+# p val of a two-sided test is 
+# double smallest of two p vals for above and below
+2*pvals[which.min(pvals)] 
+```
+  
+### Poisson Example  
+* Suppose that a hospital has an infection rate of 10 infections per 100 person/days at risk (rate of 0.1) during the last monitoring period  
+* Assume that an infection rate of 0.05 is an important benchmark, greater than that value would require some quality control intervention  
+  + $H_0 : \lambda = 0.05$  
+  + $H_a : \lambda > 0.05$  
+```{r}
+p <- ppois(9, 5, lower.tail = FALSE)
+p
+```
+  
+* So the probability of obtaining 10 or more infections given the true rate of infections is 5 infections per 100 person/days at risk is `r round(p*100, 2)`%, indicating the probability of obtaining a random sample this high is quite low and some quality control measures shouldn't be implemented  
+
+
 ## Lesson with `swirl()`: P Values  
+(No new content)
+
 **Reminder to commit (10), delete this line** ***AFTER*** **committing** 
 
 ## Quiz 3  
