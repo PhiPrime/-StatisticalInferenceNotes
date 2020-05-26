@@ -1126,14 +1126,124 @@ Comparing Blood Pressure for 8 oral contraceptive users versus 21 controls
 (No new content)
 
 
-
-**Reminder to commit (08), delete this line** ***AFTER*** **committing**  
-
 ## Hypothesis Testing  
+* Hypothesis testing is concerned with making decisions using data  
+* A null hypothesis is specified that represents the status quo, usually labeled $H_0$  
+* The null hypothesis is assumed true and statistical evidence is required to reject it in favor of a research or alternative hypothesis, $H_a$  
+* The alternative hypotheses are typically of the form $<$, $>$ or $\ne$  
+* There are four possible outcomes of our statistical decision process  
+![Possible Outcomes](./Images/Hypothesis_Outcome_Chart.png)  
+  
+  + $\alpha$ is the probability of a Type 1 error  
+  + $\beta$ is the probability of a Type 2 error  
+  + $\alpha$ and $\beta$ are proportional  
+  + I remember these errors by order them by the reality: $H_0$ is true, but we made an eror so this is a *Type 1 Error*, $H_1$, the alt hypothesis, is true, but we made an error so this is a *Type 2 Error*  
+  
+### Court Example  
+* In a court of law; the null hypothesis is that the defendant is innocent
+  + $H_0 : guilty = false$  
+* We require a *standard* on the available evidence to reject the null hypothesis (and thus convict)  
+* If we set a low standard, then we would increase the percentage of innocent people convicted (Type 1 errors); however we would also increase the percentage of guilty people convicted (correctly rejecting the null)  
+* If we set a high standard, then we increase the percentage of innocent people let free (correctly accepting the null) while we would also increase the percentage of guilty people let free (Type 2 errors)  
+* In theory our (U.S) court system perfers not locking up innocent people and thus chooses to create more Type 2 errors
+
 ## Example of Choosing a Rejection Region  
+* A respiratory disturbance index of more than 30 events / hour, say, is considered evidence of severe sleep disordered breathing (SDB)  
+* Suppose that in a sample of 100 overweight subjects with other risk factors for sleep disordered breathing at a sleep clinic, the mean RDI was 32 events / hour with a standard deviation of 10 events / hour.  
+* We might want to test the hypothesis that:  
+  + $H_0:~\mu=30$  
+  + $H-a:~\mu>30$  
+  + where $\mu$ is the population mean RDI  
+* If $\bar{X}$ is larger than some constant, C we would reject the null hypothesis  
+* Typically, C is chosen so that the probability of a Type 1 error, $\alpha$, is 0.05 (or some other relevant constant)  
+  + This would mean we want a C such that the probability $\bar{X} > C$ is 5%  
+```{r}
+#Looking at the 95th percentile  
+qnorm(0.95, mean = 30, sd = 10/sqrt(100))
+#Since our value is greater than 31.6 we could reject H_0 at this point
+
+#Looking at our p-value (probability of getting this sample mean)
+pnorm(32, mean = 30, sd = 10/sqrt(100), lower.tail = FALSE)
+```
+* Here the probability of obtaining a sample mean of 32 or more from 100 individuals of a population with a mean of 30 is 2.3%, which is enough evidence to reject the null hypothesis that the mean of these individuals is 30 and would lead one to have increased concern for SDB given a subject that is overweight with "other risk factors for sleep disordered breathing".  
+
+  + "If the p is small reject the null!" - Me  
+
 ## T Tests  
+* Consider our example again. Suppose that $n = 16$ (rather than 100)  
+* The statistic follows a $t$ distribution with 15 degrees of freedom under $H_0$  
+  + Under $H_0$, the probability that it is larger that the 95th percentile of the T distribution is 5%  
+  + The 95th percentile of the T distribution with 15 df is obtained as follows  
+```{r}
+qt(0.95, 15)
+```
+* Our test statistic is now $\frac{32-30}{10/\sqrt{16}} = 0.8$    
+  + Since our test statistic is now lower than the t dist. at .95 we fail to reject the null  
+  
+### Two sided tests  
+* Suppose that we would reject the null hypothesis if the mean was too large or too small  
+  + Sometimes mandated even though it doesn't make scientific sense to test both sides  
+  
+* $H_a : \mu \ne 30$  
+* We will reject if the test statistic, 0.8, is either too large or too small  
+* Then we want the probabilty of rejecting under the null to be 5%, split equally as 2.5% in the upper tail and 2.5% in the lower tail  
+* Thus we reject if our test statistic is larger than `qt(0.975, 15)`, `r round(qt(0.975, 15), 4)`, or smaller than `qt(0.025, 15)`, `r round(qt(0.025, 15), 4)`  
+  + This is the same as saying: reject if the absolute valuee of our statistic is larger than `qt(0.975, 15)` = `r round(qt(0.975,15), 4)`  
+  + So we fail to reject the two sided test as well  
+  + (If you fail to reject the one sided test, you know that you will fail to reject the two sided test too)  
+  
+### T test in R  
+```{r message = FALSE}
+library(UsingR)
+data(father.son)
+```
+```{r}
+result <- t.test(father.son$sheight - father.son$fheight)
+result
+```
+* Therefore we can reject the null, that the difference of son's height and father's is zero. We are 95% confident that the population mean of son's height minus father's height is in between `r floor(result$conf.int[1]*10^4)/10^4` inches and `r ceiling(result$conf.int[2]*10^4)/10^4` inches.  
+
 ## Two Group Testing  
+* We know how to do two group T tests since we already covered independent group T intervals, the test just looks at the full results of `t.test`  
+  + Rejection rules are the same as a One Sample t-test  
+  + Test $H_0: \mu_1 = \mu_2$  
+  
+### Example  
+```{r message = FALSE}
+library(datasets); library(reshape2); library(tidyverse)
+```
+```{r}
+data(ChickWeight)
+##define weight gain or loss  
+wideCW <- dcast(ChickWeight, Diet + Chick ~ Time, value.var = "weight")
+names(wideCW)[-(1:2)] <- paste0("time", names(wideCW[-(1:2)]))
+wideCW <- mutate(wideCW, gain = time21 - time0)
+
+#Subset 2 diets
+wideCW14 <- subset(wideCW, Diet %in% c(1,4))
+
+#Run t test
+results <- t.test(gain ~ Diet, #look at gain by the Diet
+       paired = FALSE, #Chicks with diet 1 are unrelated to diet 4
+       var.equal = TRUE, data = wideCW14)
+results
+```
+* These data show we can reject the null hypothesis, that the difference in means is equal to 0, with a 95% confidence that the true difference in means ($Diet_1 - Diet_4$) is between `r floor(result$conf.int[1]*10^4)/10^4` units of weight and `r ceiling(result$conf.int[2]*10^4)/10^4` units of weight.  
+
+### On binomial tests  
+* It's impossible to get an exact 5% level test for these cases due to the discreteness of the binomial  
+* For larger sample sizes, we could do a normal approximation  
+* Two sided test isn't obvious  
+  + Given a way to do two sided tests, we could take the set of values of $p_0$ for which we fail to reject to get an exact binomial confidence interval (**[This is called the Clopper/Pearson interval](https://en.wikipedia.org/wiki/Binomial_proportion_confidence_interval)**)
+* For these problems, we create a P-value rather than computing the rejection region  
+
 ## Lesson with `swirl()`: Hypothesis Testing  
+* The section of the tails where we would reject the null we call "the rejection region"  
+* One should never accept the null hypotheis, only fail to reject.  
+
+
+
+
 **Reminder to commit (09), delete this line** ***AFTER*** **committing**  
 
 ## P-Values  
