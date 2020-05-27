@@ -1353,7 +1353,7 @@ oldSd <- 2
 (oldMu - newMu) + c(-1,1) * qnorm(.975) * sqrt((oldSd^2+newSd^2)/100)
 ```
 
-7. Suppose that 18 obese subjects were randomized, 9 each, to a new diet pill and a placebo. Subjects’ body mass indices (BMIs) were measured at a baseline and again after having received the treatment or placebo for four weeks. The average difference from follow-up to the baseline (followup - baseline) was -3 kg/m2 for the treated group and 1 kg/m2 for the placebo group. The corresponding standard deviations of the differences was 1.5 kg/m2 for the treatment group and 1.8 kg/m2 for the placebo group. Does the change in BMI over the four week period appear to differ between the treated and placebo groups? Assuming normality of the underlying data and a common population variance, calculate the relevant 90% t confidence interval. Subtract in the order of (Treated - Placebo) with the smaller (more negative) number first.  
+7. Suppose that 18 obese subjects were randomized, 9 each, to a new diet pill and a placebo. Subjects' body mass indices (BMIs) were measured at a baseline and again after having received the treatment or placebo for four weeks. The average difference from follow-up to the baseline (followup - baseline) was -3 kg/m2 for the treated group and 1 kg/m2 for the placebo group. The corresponding standard deviations of the differences was 1.5 kg/m2 for the treatment group and 1.8 kg/m2 for the placebo group. Does the change in BMI over the four week period appear to differ between the treated and placebo groups? Assuming normality of the underlying data and a common population variance, calculate the relevant 90% t confidence interval. Subtract in the order of (Treated - Placebo) with the smaller (more negative) number first.  
 
 ```{r}
 trMu <- -3
@@ -1365,30 +1365,126 @@ sp <- sqrt((8*trSd^2 + 8*plSd^2)/(9 + 9 - 2))
 ```
 
 
-**Reminder to commit (S3), delete this line** ***AFTER*** **committing**  
-
 # Power, Bootstrapping, & Permutation Tests  
 ## Power  
+* **Power** = $1 - \beta$ where $\beta$ is the probability of a Type 2 error, failing to reject the null when the alternative is true.  
+* We can think about the Power as the probability of rejecting the null when it is false.
+* We don't have as much control over this probability, since we've spent all of our flexibility guaranteeing that the Type 1 error rate is small  
+  + One avenue for the control of power is at the design phase.
+  + We can pick a large enough sample size so that we'd be likely to reject if the alternative is true.
+  + As such the most frequent use of power is to help us design studies  
+* Power comes more into play when you fail to reject, over rejecting the null.  
+* Power refers to the power of the study. A study with $n=3$ has less power than $n=300$  
+
+### Conceptual Example  
+* Consider our previous example involving RDI  
+  + $H_0: \mu = 30$  
+  + $H_a: \mu > 30$  
+* Then power is:  
+$P(\frac{\bar{X} - 30}{s/\sqrt{n}} > t_{1-\alpha , n-1} ; \mu = \mu_\alpha)$
+  + Note that this is a function that depends on the specific value of $\mu_\alpha$  
+  + Notice as $\mu_a$ approaches 30 the power approaches $\alpha$  
+  
 ## Calculating Power  
+```{r}
+mu0 <- 30
+mua <- c(30,31,32)
+sigma <- 4
+n <- 16
+alpha <- 0.05
+z <- qnorm(1 - alpha)
+cbind(mu_a = mua,
+      power = pnorm(mu0 + z * sigma/sqrt(n), 
+      mean = mua, sd = sigma/sqrt(n), lower.tail = FALSE))
+```
+
+* As we collect more data (Higher $n$), the slope of the power curve as mu_a increases is much steeper  
+* Power is the probability of getting a sample mean greater than the critical value for our $\alpha$ with respect to the null curve on a curve that is centered at $\mu_a$  
+
+
+
 ## Notes on Power  
+* When testing $H_a : \mu > \mu_\alpha$, notice if power is $1-\beta$ then:  
+  $1-\beta = P(\bar{X}>\mu_0 + z_{1-\alpha} \frac{\sigma}{\sqrt{n}};\mu = \mu_\alpha)$  
+  + where $\bar{X}\sim N(\mu_\alpha , \sigma^2/n)$  
+  + Unknowns: $\mu_\alpha$, $\sigma$, $n$, $\beta$ (or the power you'd like)  
+  + Knowns: $\mu_0$, $\mu_\alpha$  
+  + Specify any 3 of the unknowns and you can solve for the remainder  
+    - Most common to solve for sample size (n) or power  
+    
+* The calculation for $H_\alpha : \mu < \mu_0$ is similar  
+* For $H_\alpha : \mu \ne \mu_0$ calculate the one sided pwoer using $\alpha/2$ (this is only approximately right, it excludes the probability of getting a large TS in the opposite direction of the truth)  
+* Power goes up as $\alpha$ gets larger  
+* Power of a one sided test is greater than the power of the associated two sided test  
+* Power goes up as $\mu_1$ gets furthere away from $\mu_0$  
+* Power goes up as $n$ goes up  
+
+### Effect Size  
+* Power doesn't need $\mu_a$, $\sigma$, and $n$, instead only $\frac{\sqrt{n}(\mu_\alpha - \mu_0)}{\sigma}$  
+  + The quanitity $\frac{\mu_\alpha - \mu_0}{\sigma}$ is called the effect size, this value is unit free so it's interpritable across multiple settings  
+  
 ## T Test Power  
+* We don't actually calculate power as previously described  
+* Consider calculating power fora Gossett's $t$ test for our example  
+* The power is:  
+$P(\frac{\bar{X}-\mu_0}{S/\sqrt{n}} > t_{1-\alpha , n - 1} ; \mu = \mu_\alpha)$  
+  + Calculating this requires/follows *the non-central t distribution*  
+* In R we can use the function `power.t.test`  
+  + Omit one of the arguments and it solves for it  
+  
+### Examples  
+Calculating power  
+```{r}
+power.t.test(n = 16, delta = 2, #Delta is distance between mu_0 and mu_a
+             sd = 4, type = "one.sample", alternative = "one.sided")$power
+#Delta is used as: delta/sd so making delta be 2/4 will return the same num
+power.t.test(n = 16,
+             delta = 2/4, sd = 1, 
+             type = "one.sample", alternative = "one.sided")$power
+#Likewise..
+power.t.test(n=16,
+             delta = 100, sd = 200,
+             type = "one.sample", alternative = "one.sided")$power
+```
+
+Calculating sample size  
+```{r}
+power.t.test(power = 0.8, delta = 2/4, sd = 1, 
+             type = "one.sample", alternative = "one.sided")$n
+#As before making delta and sd proportional won't change the result
+power.t.test(power = 0.8, delta = 2, sd = 4, 
+             type = "one.sample", alternative = "one.sided")$n
+#Likewise...
+power.t.test(power = 0.8, delta = 100, sd = 200, 
+             type = "one.sample", alternative = "one.sided")$n
+```
+* Since power has a lot of 'knobs" to turn try to reduce the question down by designing the experiment a bit before running to the power
+
+## Lesson with `swirl()`: Power  
+* Power is the probability of rejecting the null when it is indeed false  
+
 **Reminder to commit (11), delete this line** ***AFTER*** **committing**  
 
 ## Multiple Comparisons  
+
+## Lesson with `swirl()`: Multiple Testing  
 **Reminder to commit (12), delete this line** ***AFTER*** **committing**  
 
 ## Bootstrapping  
 ## Bootstrapping Example  
 ## Notes on the Bootstrap  
 ## Permutation Tests  
+## Lesson with `swirl()`: Resampling  
+
 **Reminder to commit (13), delete this line** ***AFTER*** **committing**
 
-## Lessons with `swirl()`  
 ## Quiz 4  
 
-**Reminder to commit (S4), delete this line** ***BEFORE*** **committing**  
+**Reminder to commit (S4), delete this line** ***AFTER*** **committing**  
 
+# Course Project  
 
+**Reminder to commit (P1), delete this line** ***BEFORE*** **committing** 
 
 
 
