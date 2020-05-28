@@ -1461,13 +1461,152 @@ power.t.test(power = 0.8, delta = 100, sd = 200,
 * Since power has a lot of 'knobs" to turn try to reduce the question down by designing the experiment a bit before running to the power
 
 ## Lesson with `swirl()`: Power  
-* Power is the probability of rejecting the null when it is indeed false  
-
-**Reminder to commit (11), delete this line** ***AFTER*** **committing**  
+* Power is the probability of rejecting the null when it is indeed false   
 
 ## Multiple Comparisons  
+* Hypothesis testing/significance analysis is commonly overused  
+* Correcting for multiple testing avoids false positives or discoveries  
+* Two key components  
+  + Error measure that you'd like to control 
+  + Correction or statistical method that's used to control that error measure  
+  
+### Three eras of statistics  
+1) The age of **[Quetelet](https://en.wikipedia.org/wiki/Adolphe_Quetelet)** and his successors, in which huge census-level data sets were brought to bear on simple but important questions: Are there more male than female births? Is the rate of insanity rising? Etc.  
+2) The classical period of Pearson, Fisher, Neyman, Hotelling, and their successors, intellectual giants who developed a theory of optimal inference capable of wringing every drop of information out of a scientific experiment. The questions dealt with still tended to be simple (i.e. Is treatment A better than treatment B?)  
+3) The era of scientific mass production, in which new technologies typified by the microarray allow a single team of scientists to produce data sets of a size Quetelet would envy. But now the flood fo data is accompanied by a deluge of questions, perhaps thousands of estimates or hypothesis tests that the statistician is charged with answering together; not at all what the classical masters had in mind. Which variables matter among the thousands measures? How do you relate unrelated information?  
+
+### Why correct for multiple tests?  
+Simply checking a relationship until you get a p > 0.05 is considered p-hacking and after multiple tests you'l eventually get a p value greater than 0.05 out of coinsidence  
+![Relevant XKCD](./Images/p_hacking.png)
+
+
+### Error Rates  
+(Omitted review of errors)  
+* False positive rate - The rate at which false results are called significant $E[\frac{Error_{Type\space1}}{Total\space number\space of\space non-significant\space variables}]$  
+* Family wise error rate (FWER) - The probability of at least one false positive $P(Error_{Type\space 1} \geq 1)$  
+* False discovery rate (FDR) - The rate at which claims of significance are false $E[\frac{Error_{Type\space1}}{Occurance\space of\space rejecting\space H_0}]$
+
+### Controlling the false positive rate  
+* If P-values are correctly calculated calling all $P < \alpha$ significant will control the false positive rate at level $\alpha$ on average  
+* Problem: Suppose that you perform 10,000 tests and $\beta = 0$ for all of them  
+  + Suppose that you call all $P<0.05$ significant  
+  + The expected number of false positives is: $10000 \times 0.05 = 500$ false positives.  
+  + How do we avoid so many false positives?  
+
+### Controlling family-wise error rate (FWER)  
+* The **[Bonferroni correction](https://en.wikipedia.org/wiki/Bonferroni_correction)** is the oldest multiple testing correction  
+* Basic idea:  
+  + Suppose you do $m$ tests  
+  + You want to control FWER at level $\alpha$ so $P(Error_{Type_1} < \alpha)$  
+  + Calculate P-values normally  
+  + Set $\alpha_{fwer} = \alpha/m$  
+  + Call all P-values less than $\alpha_{fwer}$ significant  
+* Pros: Easy to calculate, conservative  
+* Cons: May be very conservative, may want to allow for a few false positives  
+
+### Controlling False Discovery Rate (FDR)  
+* This is the most popular correction when performing lots of tests, say in genomics, imaging, astronomy, or other signal-processing disciplines  
+* Basic Idea:  
+  + Suppose you do $m$ tests  
+  + You want to control FDR at level $\alpha$ so $E[\frac{Error_{Type~1}}{R}]$    
+    - Where $R$ represents the total number of discoveries  
+  + Calculate P-values normally  
+  + Prder the P-values from smallest to largest $P_{(1)},...,P_{(m)}$  
+  + Call any $P_{(i)} \leq \alpha \times \frac{i}{m}$ significant  
+* Pros: Still pretty easy to calculate, less conservative (maybe much less)  
+* Cons: Allows for more false positives, may behave strangely under dependence  
+
+### Example of corrections  
+![Example with 10 P-values](./Images/Example_with_10_p-values.png)
+  
+Controlling all error rates at $\alpha = 0.20$  
+* Slope of BH correction is determined by smallest p value  
+
+### Adjusted P-Values  
+* One approach is to adjust the threshold $\alpha$  
+* A different approach is to calculate "adjusted p-values"  
+* Once you adjust them they are not classical p-values anymore  
+* But they can be used directly without adjusting $\alpha$  
+Example:  
+* Suppose P-values are $P_1,...,P_m$  
+* One could adjust them by taking $P_i^{fwer} = max(m \times P_i)$ for each p-value  
+* Then if you call all $P_i^{fwer} < \alpha$ significant you will contorl the FWER.  
+
+### Case Study 1: no true positives  
+```{r}
+set.seed(1010093)
+pValues <- rep(NA, 1000)
+for(i in 1:1000){
+  y <- rnorm(20)
+  x <- rnorm(20)
+  #Get p value for simulated examples
+  pValues[i] <- summary(lm(y ~ x))$coeff[2,4]
+}
+
+# Controls false positive rate; there wasn't a relation in any of these
+sum(pValues < 0.05)
+
+#Control FWER
+sum(
+  p.adjust(pValues, method = "bonferroni")
+  < 0.05)
+
+#Control FDR
+sum(
+  p.adjust(pValues, method = "BH")
+  < 0.05
+)
+```
+
+### Case study 2: 50% true positives  
+```{r}
+set.seed(1010093)
+pValues <- rep(NA, 1000)
+for(i in 1:1000){
+  x <- rnorm(20)
+  #First 500 beta = 0, last 500 beta = 2
+  if(i <= 500) {y <- rnorm(20)}
+  else{y <- rnorm(20, mean = 2*x)}
+  pValues[i] <- summary(lm(y ~ x))$coeff[2,4]
+}
+trueStatus <- rep(c("zero", "not zero"), each = 500)
+# All true signals discovered with standard method
+table(pValues < 0.05, trueStatus)
+
+#Control FWER; less discoveries, no false positives
+table(p.adjust(pValues, method = "bonferroni") < 0.05, trueStatus)
+
+#Control FDR; some false positives, all true found
+table(p.adjust(pValues, method = "BH") < 0.05, trueStatus)
+```
+
+### Case Study 3: 50% true positives  
+P-values versus adjusted P-values  
+```{r}
+par(mfrow = c(1,2))
+plot(pValues, p.adjust(pValues, method = "bonferroni"), pch = 19)
+plot(pValues, p.adjust(pValues, method = "BH"), pch = 19)
+```
+
+### Notes and Further Resources  
+Notes:  
+* Multiple testing is an entire subfield  
+* A basic Bonferroni/BH correction is usually enough  
+* If there is strong dependence between tests there may be problems  
+  + Consider `method = "BY"`  
+  
+Further Resources:  
+* **[Multiple testing procedures with applications to genomics](http://www.amazon.com/Multiple-Procedures-Applications-Genomics-Statistics/dp/0387493166/ref=sr_1_2/102-3292576-129059?ie=UTF8&s=books&qid=1187394873&sr=1-2)**  
+* **[Statistical significance for genome-wide studies](http://www.pnas.org/content/100/16/9440.full)**  
+* **[Introduction to multiple testing](http://ies.ed.gov/ncee/pubs/20084018/app_b.asp)**  
+
+
 
 ## Lesson with `swirl()`: Multiple Testing  
+(No new content)
+
+
+
 **Reminder to commit (12), delete this line** ***AFTER*** **committing**  
 
 ## Bootstrapping  
