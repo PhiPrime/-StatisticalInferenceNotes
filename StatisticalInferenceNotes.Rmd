@@ -1606,14 +1606,210 @@ Further Resources:
 (No new content)
 
 
-
-**Reminder to commit (12), delete this line** ***AFTER*** **committing**  
-
 ## Bootstrapping  
+* Resampling based procedures are ways to perform population based statistical inferences, while living within our data.  
+  + Scale well to large studies  
+  + Often make very few assumptions  
+
+* The bootstrap is a tremendously useful tool for constructing confidence intervals and calculating standard errors for difficult statistics  
+  + Comes from the phrase **["pulling one's self up by thier own bootstrap"](https://www.phrases.org.uk/meanings/pull-yourself-up-by-your-bootstraps.html)**  
+    - Although this is not an impossible feat and is statistically backed  
+  + First developed by **[Bradley Efron](https://en.wikipedia.org/wiki/Bradley_Efron)** in his 1979 paper, "Bootstrap methods: another look at the jackknife" (jackknife is another statistical method). Methods were developed up to the ABC procedure in '92  
+  + Treats the sample as the population and takes additional samples from it, with replacement OoO  
+  
+* For example, how would one derive a confidence interval for the median?  
+  + There are some complicated methods one could use  
+  + However a bootstrap would help one do this with less computations  
+
+### Example: Sampling die rolls  
+* Consider you wanted to make a distribution of die rolls, knowing it's a fair die you could take 50 samples a uniform distribution of values `1:6` and repeat this process multiple times then get the distribution of the means  
+```{r message = FALSE}
+library(tidyverse); library(gridExtra)
+```
+```{r}
+set.seed(1618)
+nosim <- 1000
+
+cfunc <- function(x, n) {mean(x)}
+g1 <- ggplot(data.frame(y = rep(1/6, 6), x = 1:6), aes(x, y)) +
+  geom_bar(stat = "identity", fill = "#5BC2E7", colour = "#000000") +
+  ggtitle("Densities")  
+
+dat <- data.frame(x = apply(
+  matrix(sample(1:6, nosim * 50, replace = TRUE), nosim),
+  1, mean))
+g2 <- ggplot(dat, aes(x)) + 
+  geom_histogram(binwidth = 0.2, colour = "#000000", fill = "#FA8072",
+                 aes(y = ..density..)) +
+  ggtitle(paste(nosim, "Simulated Die Rolls"))
+grid.arrange(g1, g2, ncol = 2)
+```
+* If this was a more complex data set, or before computers it would require performing `r 50*nosim` die rolls.  
+
+* As such we may not want to perform that many rolls, or in complex data we may only have one sample...
+```{r}
+set.seed(1618033)
+n <-  50
+B <-  1000
+x <- sample(1:6, n, replace = TRUE)
+
+## Bottstrap and resample the sample/population, x
+resamples <- matrix(sample(x, n * B, replace = TRUE), B, n)
+resampledMeans <- apply(resamples, 1, mean)
+g1 <- ggplot(as.data.frame(prop.table(table(x))), aes(x, Freq)) +
+  geom_bar(colour = "#000000", fill = "5BC2E7", stat = "identity") +
+  ggtitle(paste("Density of sample of", n, "die rolls"))
+g2 <- ggplot(data.frame(x = resampledMeans), aes(x)) +
+  geom_histogram(binwidth = 0.2, colour = "#000000", fill = "#FA8072",
+                 aes(y = ..density..)) + 
+  ggtitle(paste("Distribution of", B, "Resampled Means"))  
+grid.arrange(g1, g2, ncol = 2)
+```
+* So from a single sample of `r n` die rolls we can infer what the population mean would be by repeatitly sampling from our obtained sample  
+* Since it's with replacement the same data point may get used multiple times  
+
+
 ## Bootstrapping Example  
+* Consider example with father.son data; looking for medians    
+```{r message = FALSE}
+library(UsingR)
+```
+```{r}
+set.seed(1618)
+data(father.son)
+x <- father.son$sheight
+n <- length(x)
+B <- 1000
+resamples <- matrix(sample(x, n * B, replace = TRUE), B, n)
+resampledMedians <- apply(resamples, 1, median)
+
+plot <- ggplot(data.frame(x = resampledMedians), aes(x)) +
+  geom_density(size = 2, fill = "#FF0000") +
+  geom_vline(xintercept = median(x), size = 2) +
+  ggtitle("Distribution of Medians from Bootstrapping") +
+  xlab("Median of Son Heights")
+plot
+```
+  
 ## Notes on the Bootstrap  
+* Suppose that one has a statistic that estimates some population parameter, but they don't know it's sampling distribution  
+* The bootstrap principle suggests using the distribution defined by the data to approximate its sampling distribution  
+
+### In practice  
+* In practice, the bootstrap principle is always carried out using simulation  
+* Only a few aspects of bootsrap resampling will be covered  
+  + Mainly confidence interval and standard errors  
+The general procedure follows:
+* By first simulating complete data sets from the observed data with replacement  
+  + This is approximately drawing from the sampling distribution of that statistic, at least as far as the data is able to approximae the true population distribution  
+    - "Garbage in, garbage out"  
+* Calculate the statistic for each simulated data set  
+* Use the simulated statistics to either define a confidence interval or take the standard deviation to calculate a standard error  
+  
+### Nonparametric Bootstrap Algorithm  
+* Bootstrap procedure for calculating confidence interval for the median from a data set of $n$ observations  
+1) Sample $n$ observations **with replacement** from the observed data resulting in one simulated complete data set  
+  + Sampling the observations without replacement would just result in copying the original data  
+2) Take the statistic (median in this case) of the simulated data set  
+3) Repeat these two steps $B$ times, resulting in $B$ simualted medians  
+  + You want $B$ to be large so your error is small  
+4) These statistics (medians in this case) are approximately drawn from the sampling distribution fo the median of $n$ observations; therefore we can...
+  + Draw a histogram of them  
+  + Calculate their standard deviation to estimate the standard error of the statistic  
+  + Take the $2.5^{th}$ and $97.5^{th}$ percentiles as a confidence interval for the statistic  
+  
+### Example  
+```{r}
+set.seed(1618033)
+data(father.son)
+x <- father.son$sheight
+n <- length(x)
+B <- 10000
+resamples <- matrix(sample(x, n * B, replace = TRUE), B, n)
+medians <- apply(resamples, 1, median)
+sd(medians)
+quantile(medians, c(0.025,0.975)) #Gives a 95% CI
+```
+```{r}
+#Histogram  
+g <- ggplot(data.frame(medians = medians), aes(medians)) +
+  geom_histogram(color = "#000000", fill = "#5BC2E7", binwidth = 0.05)
+g
+```
+  
+* This is an estimate of the population distribution of the median  
+
+### Some more notes on the bootstrap  
+* The bootstrap is non-parametric  
+* Better precentile bootstrap confidence intervals correct for bias  
+* There are lots of variations on bootstrap procedures; the book "An Introduction to the Bootstrap" by Efron and Tibshirani is a great place to start for both bootstrap and jackknife information  
+
 ## Permutation Tests  
+### Group Comparisions  
+* Permutations tests are often used with group comparisions  
+* Consider comparing two independent groups  
+* Example: comparing sprays B and C  
+```{r}
+data(InsectSprays)
+g <- ggplot(InsectSprays, aes(spray, count, fill = spray)) +
+  geom_boxplot()
+g
+```
+
+### Permutation Tests  
+* Consider the null hypothesis that the distribution of the observations from each group is the same  
+  + Then, the group labels are irrelevant  
+* Consider a data frame with count and spray  
+* Permute the spray (group) labels  
+* Recalculate the statistic for each resampled groups  
+  + Mean difference in counts  
+  + Geometric means  
+  + T statistic  
+* Calculate the percentage of simulations where the simulated statistic was more extreme (toward the alternative) than the observed  
+
+### Variations on Permutation Testing  
+```{r echo = FALSE}
+data.frame(Data_Type = c("Ranks", "Binary", "Raw data"),
+           Statistic = c("Rank Sum", "Hypergeometric Prob.", NA),
+           Test_Name = c("Rank Sum Test", "Fisher's Exact Test", 
+                         "Ordinary Permutation Test"))
+```
+* Also, so-called *randomization tests* are exactly permutation tests, witha  different motivation  
+* For matched data, one can randomize the signs  
+  + For ranks, this results in the signed rank test  
+* Permutation strategies work for regression as well  
+  + Permuting a regressor of interest  
+* Permutation tests work very well in multivariate settings  
+  + Can calculate maximum statistics that help calculate FWER  
+  
+### Permutation test B v C  
+```{r}
+set.seed(1618)
+subdata <- InsectSprays[InsectSprays$spray %in% c("B", "C"),]
+y <- subdata$count  
+group <- as.character(subdata$spray)
+testStat <- function(w, g){ mean(w[g == "B"]) - mean(w[g == "C"])}  
+observedStat <- testStat(y, group)
+permutations <- sapply(1:10000, function(i){ testStat(y, sample(group))})
+observedStat #Avg difference
+mean(permutations > observedStat)
+#Couldn't find a reconfiguration that led to a larger p value; 
+#giving more evidence to reject the null that there is no 
+#difference between the groups
+```
+```{r}
+## Histogram of permutations
+plot <- ggplot(data.frame(permutations = permutations), aes(permutations)) +
+  geom_histogram(fill = "#5BC2E7", color = "#000000", binwidth = 1) +
+  geom_vline(xintercept = observedStat, size = 2)
+plot
+```
+* This is simular to evaluating a t-distribution  
+* Since the observed data is so far in the tail, it gives evidence that spray B really is different than spray C  
+
 ## Lesson with `swirl()`: Resampling  
+(No new content)  
+
 
 **Reminder to commit (13), delete this line** ***AFTER*** **committing**
 
