@@ -1868,12 +1868,9 @@ power.t.test(delta = 0.01, sd = 0.04, sig.level = .05, power = .90,
 9. As you increase the type 1 error rate, $\alpha$, what happens to power?  
 * Power increases quicker with a higher alpha  
 
-**Reminder to commit (S4), delete this line** ***AFTER*** **committing**  
 
 # Course Project  
-
-**Reminder to commit (P1), delete this line** ***BEFORE*** **committing** 
-
+**[My project can be found on GitHub](https://github.com/PhiPrime/StatisticalInferenceCourseProject)**
 
 
 
